@@ -1,0 +1,10 @@
+{
+  "name": "tfg",
+  "version": "0.0.1",
+  "main": "server.js",
+  "author": "K3ig0 (Manuel Sánchez Naveira) <keigo.fic@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.13.1"
+  }
+}
