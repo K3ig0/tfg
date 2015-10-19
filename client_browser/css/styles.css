@@ -1,0 +1,101 @@
+* { 
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body { 
+	background: #fff;
+	font: 13px Helvetica, Arial, sans-serif;
+}
+
+
+/*** JOIN THE CHAT ***/
+#joinOptions {
+	display: block;
+	top: 0;
+	position: absolute;
+    width: 100%;
+    padding: 1rem;
+    font-family:'Open Sans', sans-serif;
+    text-align:center;
+}
+
+#joinOptions legend {
+    color: #222;
+    font-weight: bold;
+	font-size: 0.9rem;
+	padding: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+#joinOptions button {
+    box-sizing: border-box;
+    margin: 1rem auto;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.preForm {
+    padding-bottom: 0.4rem;
+    text-align: center;
+}
+
+.form {
+    padding-bottom: 2rem;
+}
+
+.form input {
+    text-align: center;
+}
+/*-- */
+
+
+
+/*** CHAT ***/
+#chat {
+	display: none;
+	width: 100%;
+	height: 80vh;
+}
+
+#chat_info {
+	float: left;
+	background: #fff;
+	padding: 5px 10px;
+}
+
+#conversation {
+	background: #f2f2f2;
+} 
+
+#chat_info, #conversation {
+	overflow: auto;
+	height: 70vh;
+}
+
+#users {
+	padding-top: 0.5rem;
+}
+
+#messages { 
+	font: 14px Helvetica, Arial, sans-serif;
+}
+
+#messages li {
+	padding: 5px 10px;
+}
+
+#chatBar {
+    display: table;
+    padding: 0.7em 0 0;
+	width: 100%;
+	height: 5vh;
+}
+
+#chatBar input {
+    width: 100%;
+    padding: .5em 1em;
+}
+/*-- */

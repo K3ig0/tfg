@@ -5,6 +5,7 @@
   "author": "K3ig0 (Manuel Sánchez Naveira) <keigo.fic@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.13.1"
+    "express": "^4.13.1",
+    "socket.io": "^1.3.7"
   }
 }
