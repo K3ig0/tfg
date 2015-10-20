@@ -6,6 +6,11 @@ var socket = io();
 
 var userName = '';
 
+//<enter> key on the username textbox to access the chat
+$('#joinOptions .inputUsername').keyup(function(e) {
+    if(e.which == 13) //enter key
+        $('#join').click();
+});
 $('#join').click(function() {
 	var userName_input = $('#joinOptions .inputUsername').val();
 
@@ -69,7 +74,7 @@ function initChat() {
 		}
 	});
 	$('#inputMsg').keyup(function(e) {
-	    if(e.keyCode == 13)
+	    if(e.which == 13)
 	        $(this).trigger('enterKey');
 	});
 
