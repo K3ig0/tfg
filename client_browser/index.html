@@ -4,8 +4,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.socket.io http://code.jquery.com; connect-src 'self' ws: ; style-src 'self';"> 
-	<title>Iteración 1 - Chat básico y usuarios en línea</title>
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; connect-src 'self' ws: ; style-src 'self';"> 
+	<title>Iteración 2 - Las salas</title>
 	
 	<link rel="stylesheet" href="css/styles.css">
 	<!--[if lt IE 9]>
@@ -14,23 +14,62 @@
 </head>
 
 <body>
-	<div id="joinOptions">
+
+	<div id="access">
+		<div id="newRoom">
+			<button>New Room</button>
+		</div>
+		<div id="joinRoom">
+			<button>Join Room</button>
+		</div>
+	</div>
+
+	<div id="newOptions" class="accessOptions">
 		<fieldset>
-		<legend>Join the chat</legend>
+		<legend>New Room</legend>
     	<div class="preForm">
     		Your username:
     	</div>
 		<div class="form">
 			<input class="inputUsername" type="text" placeholder="<Required>">
 		</div>
+    	<div class="preForm">
+    		Room name:
+		</div>
+        <div class="form">
+            <input class="inputRoom" type="text" placeholder="[Optional]" autocomplete="off" />
+        </div>	
+		</fieldset>
+		<button id="new">Create</button>
+		<button class="cancel">Cancel</button>
+	</div>
+
+	<div id="joinOptions" class="accessOptions">
+		<fieldset>
+		<legend>Join Room</legend>
+    	<div class="preForm">
+    		Your username:
+    	</div>
+		<div class="form">
+			<input class="inputUsername" type="text" placeholder="<Required>">
+		</div>
+    	<div class="preForm">
+    		Room id / name:
+		</div>
+        <div class="form">
+            <input class="inputRoom" type="text" placeholder="<Required>" autocomplete="off" />
+        </div>
 		</fieldset>
 		<button id="join">Join</button>
+		<button class="cancel">Cancel</button>
 	</div>
 
 	<section id="chat">
 		<div id ="chat_info">
-			<u>Users:</u>
-			<ul id="users"></ul>
+			<p>Room:</p>
+			<div id="roomNumber"></div>
+			<p>Members:</p>
+			<ul id="members"></ul>
 		</div>
 
 		<div id="conversation">
@@ -45,8 +84,8 @@
 
 
     <!--JavaScript dependencies-->
-	<script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
-	<script src="http://code.jquery.com/jquery-1.11.3.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.7/socket.io.min.js"></script>
 	<script src="js/client.js"></script>
 
 </body>

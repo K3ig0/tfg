@@ -5,36 +5,57 @@
 }
 
 body { 
-	background: #fff;
+	background: #aaa;
 	font: 13px Helvetica, Arial, sans-serif;
+    color: #222;
 }
 
+/***NEW / JOIN ROOM SCREEN ***/
+#access {
+    display: table;
+    margin: 0 auto;
+    padding: 10%;
+}
 
-/*** JOIN THE CHAT ***/
-#joinOptions {
+#access button {
 	display: block;
+	width: 20vw;
+    margin-bottom: 4rem;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    background: #f2f2f2;
+    letter-spacing: 1px;
+    font-size: 1rem;
+    font-weight: bold;
+	border-style: outset;
+	border-width: 4px;
+}
+
+/*** NEW / JOIN OPTIONS ***/
+.accessOptions {
+	display: none;
 	top: 0;
 	position: absolute;
     width: 100%;
-    padding: 1rem;
-    font-family:'Open Sans', sans-serif;
+    padding-top: 2.5%;
+    padding: 1%;
     text-align:center;
+    font-weight: bold;
 }
 
-#joinOptions legend {
-    color: #222;
-    font-weight: bold;
-	font-size: 0.9rem;
+.accessOptions legend {
+	font-size: 1rem;
 	padding: 1rem;
 	margin-bottom: 0.5rem;
 }
 
-#joinOptions button {
-    box-sizing: border-box;
+.accessOptions button {
     margin: 1rem auto;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     text-align: center;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    background: #f2f2f2;
 }
 
 .preForm {
@@ -48,6 +69,8 @@ body {
 
 .form input {
     text-align: center;
+    padding: 0.25em;
+    background: #f2f2f2;
 }
 /*-- */
 
@@ -57,26 +80,44 @@ body {
 #chat {
 	display: none;
 	width: 100%;
-	height: 80vh;
+	height: 100vh;
+	background: #fff;
 }
 
 #chat_info {
 	float: left;
-	background: #fff;
 	padding: 5px 10px;
+	background: #aaa;
+	border-style: ridge;
+}
+
+#chat_info p {
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	letter-spacing: 1px;
+}
+
+#roomNumber {
+	padding-bottom: 1em;
+	font-weight: bold;
+	color: #f2f2f2;
+	border-bottom: 1.5px dotted #ccc;
+}
+
+#members {
+	font-weight: bold;
 }
 
 #conversation {
+	padding-top: 0.5em;
 	background: #f2f2f2;
-} 
+	border-style: outset;
+}
 
 #chat_info, #conversation {
 	overflow: auto;
 	height: 70vh;
-}
-
-#users {
-	padding-top: 0.5rem;
+	border-width: 1px;
 }
 
 #messages { 
@@ -99,3 +140,39 @@ body {
     padding: .5em 1em;
 }
 /*-- */
+
+
+/** RESPONSIVE (media queries) **/
+
+/* Tablets
+   ---------------------------------- */
+@media (max-width: 1024px) {
+	#access button {
+		width: 70vw;
+	}
+}
+
+
+/* Mobile-landscape / tablet-portrait
+   ---------------------------------- */
+@media (max-width: 768px) {
+
+	#access button {
+		width: 60vw;
+		padding: 1.5rem;
+		margin-bottom: 0em;
+	}
+
+	#newRoom {
+		margin-bottom: 2.4rem;
+	}
+}
+
+/* Mobile-portrait
+   ---------------------------------- */
+@media (max-width: 480px) {
+
+	#access {
+		padding-top: 12%;
+	}
+}
