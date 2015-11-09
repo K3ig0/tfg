@@ -47,7 +47,9 @@ io.on('connection', function(socket){
 		socket.roomId = roomId;
 
 		//add the room id generated and the username to the global list
-		rooms[roomId] = {members: [userName]};
+		rooms[roomId] = {
+			members: [{userName: userName, coords: undefined}]
+		};
 
 		//send client to the new room
 		socket.join(roomId);
@@ -77,7 +79,7 @@ io.on('connection', function(socket){
 		socket.roomId = roomId;
 
 		//add the user to the list of members of the room in the rooms global list
-		rooms[roomId]['members'].push(userName);
+		rooms[roomId]['members'].push({userName: userName, coords: undefined});
 
 		//send client to the new room
 		socket.join(roomId);
@@ -87,6 +89,28 @@ io.on('connection', function(socket){
 
 		//echo to room's client that a new member has connected
 		socket.broadcast.to(roomId).emit('new user', userName);
+	});
+
+	//*** COORDS EXCHANGE (geolocation) ***
+	//when a client (member) emits 'coords'
+	socket.on('coords', function(coords){
+		//this client is a member?
+		if (socket.roomId != undefined) {
+			//Debug
+			console.log('User: %s --> lat: %s / lng: %s / acc: %s', socket.userName, coords.latlng.lat, coords.latlng.lng, coords.acc);
+
+			var myPos = findMember(socket.roomId, socket.userName);
+
+			//send to this client the names&coords of the members of his room (only one time and if the room has more than one member)
+			if (rooms[socket.roomId].members.length > 1 && rooms[socket.roomId]['members'][myPos].coords == undefined) 
+				socket.emit('member coords', rooms[socket.roomId].members);
+
+			//store my coords in the members list
+			rooms[socket.roomId]['members'][myPos].coords = coords;
+			
+			//send the client name and coords to the members of his room
+			socket.broadcast.to(socket.roomId).emit('member coords', [{userName: socket.userName, coords: coords}]);
+		}
 	});
 
 	//when the client emits 'chat message'
@@ -127,7 +151,7 @@ function randomAlphanumeric(n) {
 //find a member of the room X given his userName
 function findMember(roomId, userName) { 
 	for (var i = 0; i < rooms[roomId]['members'].length; i++) {
-		if (rooms[roomId]['members'][i] == userName) 
+		if (rooms[roomId]['members'][i].userName == userName) 
 			return i;	
 	}
 	return -1;

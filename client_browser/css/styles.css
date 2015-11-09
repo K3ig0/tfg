@@ -75,13 +75,27 @@ body {
 /*-- */
 
 
+/*** MAP ***/
+#map {
+	display: none;
+	top: 0;
+	position: fixed;
+	width: 100%;
+	height: 65vh; 
+}
+/*-- */
+
 
 /*** CHAT ***/
 #chat {
 	display: none;
+	bottom: 0;
+	position: fixed;
 	width: 100%;
-	height: 100vh;
-	background: #fff;
+	height: 35vh;
+	border-style: ridge;
+	border-width: 1px;
+	border-color: #aaa;
 }
 
 #chat_info {
@@ -89,6 +103,7 @@ body {
 	padding: 5px 10px;
 	background: #aaa;
 	border-style: ridge;
+	border-color: #f2f2f2;
 }
 
 #chat_info p {
@@ -111,13 +126,11 @@ body {
 #conversation {
 	padding-top: 0.5em;
 	background: #f2f2f2;
-	border-style: outset;
 }
 
 #chat_info, #conversation {
 	overflow: auto;
-	height: 70vh;
-	border-width: 1px;
+	height: 30vh;
 }
 
 #messages { 
@@ -130,14 +143,41 @@ body {
 
 #chatBar {
     display: table;
-    padding: 0.7em 0 0;
 	width: 100%;
-	height: 5vh;
 }
 
 #chatBar input {
+	height: 5vh;
+	padding-left: 0.5em;
     width: 100%;
-    padding: .5em 1em;
+}
+/*-- */
+
+
+/** Switch between map and chat (Mobile and Tablets) **/
+#switchButtons { 
+	display: none;
+}
+
+#switchButtons button {
+	top: 0;
+	left: 0;
+    position: absolute;
+    width: 50%;
+    height: 12vh;
+    letter-spacing: 1px;
+    font-size: 1rem;
+    text-align: center;
+    background: #f2f2f2;
+	border-style: outset;
+}
+
+#switchButtons button:nth-child(1) {
+	font-weight: bold;
+}
+
+#switchButtons button:nth-child(2) {
+	left: 50%;
 }
 /*-- */
 
@@ -166,13 +206,66 @@ body {
 	#newRoom {
 		margin-bottom: 2.4rem;
 	}
+
+	#map {
+		top: auto;
+		bottom: 0;
+		height: 88vh;
+	}
+
+	#chat {
+		height: 88vh;
+	}
+
+	#chat_info, #conversation {
+		height: 76vh;
+	}
+
+	#chatBar input {
+		height: 12vh;
+	}
 }
 
 /* Mobile-portrait
    ---------------------------------- */
 @media (max-width: 480px) {
-
 	#access {
 		padding-top: 12%;
+	}
+}
+
+/* Mobile-landscape
+   --------------------------------- */
+@media (max-height: 400px) {
+	#switchButtons button {
+		height: 18vh;
+	}
+
+	#map {
+		height: 82vh;
+	}
+
+	#chat {
+		height: 82vh;
+	}
+
+	#chat_info, #conversation {
+		height: 64vh;
+	}
+
+	#chatBar input {
+		height: 18vh;
+	}
+}
+
+
+/* Mobile-writing mode */
+@media (max-height: 210px) {
+	#switchButtons button, #chat_info, #conversation {
+		display: none;
+	}
+
+	#chatBar input {
+		height: 50vh;
 	}
 }
