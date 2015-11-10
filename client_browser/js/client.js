@@ -8,7 +8,7 @@ var userName = '';
 var initRoom_bool = false; //responsive purpose
 
 //map variables
-var map, last_coords;
+var map;
 var markers = {};
 var markerIcon = L.Icon.extend({
 	options: {
@@ -284,18 +284,6 @@ function geolocation() {
 
 	//if the geolocation worked ->
 	map.on('locationfound', function onLocationFound(e){
-
-		//if the new position has changed slightly compared to the last position
-		//COMMENT This to allow all user positions be transmitted even if they have barely changed
-		if (last_coords != null) //#positions_check
-			if (Math.abs(Math.abs(e.latlng.lat) - Math.abs(last_coords.lat) < 0.00005) //#positions_check
-				&& (Math.abs(Math.abs(e.latlng.lng) - Math.abs(last_coords.lng) < 0.00005))) //#positions_check
-				return;
-		//
-
-		last_coords = e.latlng; //#positions_check
-
-		//only apply the zoom one time!
 		if (setView == true) {
 			setView = false;
 			map.setView(e.latlng, 16);
