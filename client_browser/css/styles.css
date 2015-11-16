@@ -12,9 +12,10 @@ body {
 
 /***NEW / JOIN ROOM SCREEN ***/
 #access {
-    display: table;
-    margin: 0 auto;
+	display: none;
+	float: left;
     padding: 10%;
+    padding-left: 20%;
 }
 
 #access button {
@@ -31,6 +32,47 @@ body {
 	border-width: 4px;
 }
 
+/*** PUBLIC ROOMS ***/
+#publicRooms {
+	display: none;
+	float: right;
+    width: 20vw;
+    height: 60vh;
+    margin: 8%;
+    margin-right: 20%;
+    font-size: 0.9rem;
+    text-align: left;
+    overflow: auto;
+	border-style: ridge;
+	border-color: #f2f2f2;
+    text-align: center;
+}
+
+#publicRooms div {
+    color: #222;
+    font-weight: bold;
+	padding: 0.5rem;
+    letter-spacing: 1px;
+}
+
+a {
+	font-weight: bold;
+	color: #66ffff;
+}
+
+#publicRooms ul {
+    list-style-type: none;
+}
+
+#publicRooms li, #publicRooms p {
+    color: #222;
+	font-family: monospace;
+    line-height: 14px;
+    padding: 0.5rem;
+    text-align: justify;
+    border-top: 1.5px dashed #ccc;
+}
+
 /*** NEW / JOIN OPTIONS ***/
 .accessOptions {
 	display: none;
@@ -39,7 +81,7 @@ body {
     width: 100%;
     padding-top: 2.5%;
     padding: 1%;
-    text-align:center;
+    text-align: center;
     font-weight: bold;
 }
 
@@ -184,27 +226,39 @@ body {
 
 /** RESPONSIVE (media queries) **/
 
-/* Tablets
+/* Mobile/Tablet-portrait
    ---------------------------------- */
-@media (max-width: 1024px) {
-	#access button {
-		width: 70vw;
+@media (max-width: 800px) {
+
+	#access {
+		bottom: 0;
+		position: absolute;
+		height: 40vh;
+		padding: 0 20%;
 	}
-}
-
-
-/* Mobile-landscape / tablet-portrait
-   ---------------------------------- */
-@media (max-width: 768px) {
 
 	#access button {
 		width: 60vw;
-		padding: 1.5rem;
-		margin-bottom: 0em;
+		padding: 5vh 0;
+		margin-bottom: 5vh;
 	}
 
-	#newRoom {
-		margin-bottom: 2.4rem;
+	#publicRooms {
+		top: 0;
+		position: absolute;
+		height: 50vh;
+		width: 60%;
+		margin: 2.5vh 20%;
+	}
+
+	#publicRooms div {
+		padding: 2.5vh 0;
+	}
+
+	#publicRooms p {
+		padding: 2.5vh 5vw;
+		line-height: 5vh;
+		text-align: center;
 	}
 
 	#map {
@@ -226,17 +280,39 @@ body {
 	}
 }
 
-/* Mobile-portrait
-   ---------------------------------- */
-@media (max-width: 480px) {
-	#access {
-		padding-top: 12%;
-	}
-}
 
 /* Mobile-landscape
    --------------------------------- */
-@media (max-height: 400px) {
+@media (max-height: 400px) and (min-width: 427px) {
+
+	#access {
+		top: 0;
+		padding: 15vh 10vw;
+		height: 70vh;
+	}	
+
+	#access button {
+		width: 30vw;
+		padding: 10vh 0;
+		margin-bottom: 10vh;
+	}
+
+	#publicRooms {
+		position: relative;
+		width: 35vw;
+		height: 80vh;
+		margin: 10vh 10vw;
+	}
+
+	#publicRooms p {
+		padding: 5vh 2.5vw;
+		line-height: 10vh;
+	}
+
+	.form select {
+		height: 12vh;
+	}
+
 	#switchButtons button {
 		height: 18vh;
 	}
@@ -259,7 +335,7 @@ body {
 }
 
 
-/* Mobile-writing mode */
+/* Mobile - keyboard (writing mode) */
 @media (max-height: 210px) {
 	#switchButtons button, #chat_info, #conversation {
 		display: none;

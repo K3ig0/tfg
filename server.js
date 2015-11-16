@@ -4,24 +4,36 @@ var express = require('express'),
 	io = require('socket.io')(http),
 	port = 8988,
 
-	rooms = [];
+	rooms = [],
+	publicRooms = [];
 
 
 //express.static is a middleware to serve files
 app.use('/', express.static(__dirname + '/client_browser'));
+
+//join room directly from a link
+app.get('/[A-Za-z0-9]{2,10}$', function(req, res) {
+	res.sendFile(__dirname + '/client_browser/index.html');
+});
 
 //server listening port
 http.listen(port, function () {
   console.log('Server listening goes on localhost listening at port: %s', port);
 });
 
-
 //handling events
 io.on('connection', function(socket){
 
+	//join initial room
+	socket.join(0);
+
+	//list of public rooms is sent to the user, <public rooms> event
+	if (publicRooms.length > 0)
+		socket.emit('public rooms', publicRooms);
+
 	//*** NEW ROOM ***
 	//when a client emits 'new room'
-	socket.on('new room', function(userName, roomName){
+	socket.on('new room', function(userName, roomName, exposure){
 		var roomId;
 
 		if (roomName != null)
@@ -40,15 +52,19 @@ io.on('connection', function(socket){
 				return;
 			}
 
+		//leave initial room
+		socket.leave(0);
+
 		//store the username in the socket session for this client
 		socket.userName = userName;
 
 		//store the room name in the socket session for this client
 		socket.roomId = roomId;
 
-		//add the room id generated and the username to the global list
+		//add the room info to the global list
 		rooms[roomId] = {
-			members: [{userName: userName, coords: undefined}]
+			members: [{userName: userName, coords: undefined}],
+			exposure: exposure
 		};
 
 		//send client to the new room
@@ -56,6 +72,15 @@ io.on('connection', function(socket){
 
 		//send client his room id
 		socket.emit('created room', roomId);
+
+		//if the room will be public
+		if (exposure == 0) {
+			//add the room id generated to the public list
+			publicRooms.push(roomId);
+
+			//echo to everyone that a new public room has been created
+			socket.broadcast.to(0).emit('public rooms', [roomId]);
+		}
 	});
 
 	//*** JOIN ROOM ***
@@ -71,6 +96,9 @@ io.on('connection', function(socket){
 			socket.emit('joined room', 0);
 			return;
 		}
+
+		//leave initial room
+		socket.leave(0);
 
 		//store the username in the socket session for this client
 		socket.userName = userName;
@@ -98,18 +126,12 @@ io.on('connection', function(socket){
 		if (socket.roomId != undefined) {
 			//Debug
 			console.log('User: %s --> lat: %s / lng: %s / acc: %s', socket.userName, coords.latlng.lat, coords.latlng.lng, coords.acc);
-
-			var myPos = findMember(socket.roomId, socket.userName);
-
-			//send to this client the names&coords of the members of his room (only one time and if the room has more than one member)
-			if (rooms[socket.roomId].members.length > 1 && rooms[socket.roomId]['members'][myPos].coords == undefined) 
-				socket.emit('member coords', rooms[socket.roomId].members);
-
-			//store my coords in the members list
-			rooms[socket.roomId]['members'][myPos].coords = coords;
 			
 			//send the client name and coords to the members of his room
 			socket.broadcast.to(socket.roomId).emit('member coords', [{userName: socket.userName, coords: coords}]);
+
+			//store my coords in the members list
+			rooms[socket.roomId]['members'][findMember(socket.roomId, socket.userName)].coords = coords;
 		}
 	});
 
@@ -122,15 +144,21 @@ io.on('connection', function(socket){
 	socket.on('disconnect', function(){
 		if (socket.roomId != undefined) {
 			var pos = findMember(socket.roomId, socket.userName);
+
 			//removes the member of the room
 			rooms[socket.roomId]['members'].splice(pos, 1);
 			
 			//if the room has at least one member -> broadcast 'user disconnected'; else remove the room
 			if (rooms[socket.roomId]['members'].length > 0)
 				socket.broadcast.to(socket.roomId).emit('user disconnected', socket.userName, pos);	
-			else
+			else {
+				if (rooms[socket.roomId]['exposure'] == 0) {
+					var roomPublicPos = publicRooms.indexOf(socket.roomId);
+					publicRooms.splice(roomPublicPos, 1);
+					io.emit('remove public room', roomPublicPos);
+				}
 				delete(rooms[socket.roomId]);
-
+			}
 			socket.leave(socket.roomId);
 		}
 	});

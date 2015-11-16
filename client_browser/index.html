@@ -4,9 +4,9 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; connect-src 'self' ws: ; img-src 'self' http://cdn.leafletjs.com *.tile.osm.org ; style-src 'self' https://cdnjs.cloudflare.com"> 
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; connect-src 'self' ws: ; img-src 'self' data: http://cdn.leafletjs.com *.tile.osm.org ; style-src 'self' https://cdnjs.cloudflare.com"> 
 
-	<title>Iteración 3 - Mapa web</title>
+	<title>Iteración 4</title>
 	
 	<link rel="stylesheet" href="css/styles.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css">
@@ -23,6 +23,12 @@
 		</div>
 	</div>
 
+    <div id="publicRooms">
+		<div><u>Public Rooms</u></div>
+		<p>No public rooms at this time</p>
+		<ul></ul>
+	</div>
+	
 	<div id="newOptions" class="accessOptions">
 		<fieldset>
 		<legend>New Room</legend>
@@ -37,7 +43,13 @@
 		</div>
         <div class="form">
             <input class="inputRoom" type="text" placeholder="[Optional]" autocomplete="off" />
-        </div>	
+        </div>
+		<div class="form">
+			Room exposure: <select>
+				<option value="0" selected="selected">Public</option>
+				<option value="1">Unlisted</option>
+			</select>
+		</div>
 		</fieldset>
 		<button id="new">Create</button>
 		<button class="cancel">Cancel</button>

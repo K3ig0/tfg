@@ -6,6 +6,7 @@ var socket = io();
 
 var userName = '';
 var initRoom_bool = false; //responsive purpose
+var onpopstate = false;
 
 //map variables
 var map;
@@ -31,10 +32,10 @@ var $inputMsg = $('#inputMsg');
 var $showMapButton = $('#showMapButton');
 var $showChatButton = $('#showChatButton');
 
-
 //back button = first screen
-window.onpopstate = function(event) {
-	location.replace(document.URL);
+window.onpopstate = function() {
+    if (onpopstate == true)
+		location.assign(document.URL);
 };
 
 //resize event to adjust automatically according to the window resolution
@@ -58,13 +59,33 @@ $(window).on('resize', function(){
 	}
 });
 
+//check the uri and try to join the room id contained in the uri
+joinUriId();
+
+
+//receive from server the event 'public rooms'
+socket.on('public rooms', function(rooms){
+	$('#publicRooms p').hide();
+
+	for (var r = 0; r < rooms.length; r++) 
+		$('#publicRooms ul').append($('<li>').html('Room id: <a href=/'+rooms[r]+'>'+rooms[r]+'</a>'));
+});
+
+socket.on('remove public room', function(pos){
+	$('#publicRooms ul li').eq(pos).remove();
+
+	if ($('#publicRooms ul li:first').html() == null)
+		$('#publicRooms p').show();
+});
+
+
 $('#newRoom').click(function() {
-	$access.hide();
+	$('#access, #publicRooms').hide();
 	$('#newOptions').show();
 });
 
 $('#joinRoom').click(function() {
-	$access.hide();
+	$('#access, #publicRooms').hide();
 	$('#joinOptions').show();
 });
 
@@ -82,9 +103,9 @@ $('#new').click(function() {
 	//alphanumeric usernames [2-15] length
 	if (/^[A-Za-z0-9]{2,15}$/.test(userName)) {
 		if (/^[A-Za-z0-9]{2,10}$/.test(roomName))
-			socket.emit('new room', userName, roomName);
+			socket.emit('new room', userName, roomName, $('#newOptions select').val());
 		else if (roomName == null || roomName == '')
-			socket.emit('new room', userName, null);
+			socket.emit('new room', userName, null, $('#newOptions select').val());
 		else {
 			errorAccessOptions('The room name must contain between 2 and 10 alphanumeric characters');
 			return;
@@ -96,7 +117,8 @@ $('#new').click(function() {
 socket.on('created room', function(roomId){
 	//if the roomName is not exists
 	if (roomId != false) {
-		window.history.pushState('create', 'Room: ' + roomId, '/' + roomId);
+		history.pushState('create', 'Room: ' + roomId, '/' + roomId);
+		onpopstate = true;
 		initRoom();
 		$('#roomNumber').append($('<u>').text(roomId));
 		$members.append($('<li>').text(userName));
@@ -132,7 +154,8 @@ socket.on('joined room', function(code, members){
 	//if username and roomName are unique -> code = roomId
 	if (code != 0 && code != 1) {
 		history.pushState('join', 'Room: ' + code, '/' + code);
-		initRoom();
+		onpopstate = true;
+		initRoom(members);
 		$('#roomNumber').append($('<u>').text(code));
 		for	(i = 0; i < members.length; i++) 
 	    	$members.append($('<li>').text(members[i].userName));
@@ -148,7 +171,7 @@ $('.cancel').click(function() {
 	$('.accessOptions').hide();
 	$('.accessOptions input').val('');
 	$('.accessOptions p').text('');
-	$access.show();
+	$('#access, #publicRooms').show();
 });
 
 
@@ -170,6 +193,24 @@ $showMapButton.click(function(){
 
 
 //** Functions **/
+function joinUriId() {
+	var url = document.URL;
+	var pos = url.lastIndexOf('/');
+
+	//id from the uri, example: localhost:8988/a1b23 ([2-10] characters, checked previously in server)
+	var id = url.substring(pos + 1);
+
+    if (id != '') {
+    	$('#joinOptions .inputRoom').val(id);
+		$('#joinOptions').show();
+    	$('#joinOptions .inputUsername').focus();
+	}
+	else {
+		$access.css('display', 'table');
+		$('#publicRooms').show();
+	}
+}
+
 function errorAccessOptions(str) {
 	var parent = '#newOptions';
 	if ($('#joinOptions').css('display') == 'block')
@@ -180,7 +221,7 @@ function errorAccessOptions(str) {
 		$(parent + ' p:first').html(str);	
 }
 
-function initRoom() {
+function initRoom(members) {
 	initRoom_bool = true;
 	$('.accessOptions').hide();
 	$map.show();
@@ -195,6 +236,9 @@ function initRoom() {
 
 	prepareMap();
 	geolocation();
+
+	if (members != undefined) //dont do this after create a room
+		updateMarkers(members);
 
 	//send a message pressing <Enter>
 	$inputMsg.bind('enterKey',function(e){
@@ -248,7 +292,20 @@ function initRoom() {
 
 	//when we receive member coords from the server
 	socket.on('member coords', function(members) {
-		for (i = 0; i < members.length; i++) {
+		updateMarkers(members);
+	});
+}
+
+function prepareMap() {
+	map = L.map('map');
+	L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+		    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+		}).addTo(map);
+}
+
+function updateMarkers(members) {
+	for (i = 0; i < members.length; i++) {
+		if (members[i].coords != undefined) {
 			var marker, circle, radius = members[i].coords.acc / 2;
 
 			//if the user has a marker defined in the map
@@ -260,30 +317,25 @@ function initRoom() {
 	    	}
 
 	    	else {
-			    marker = L.marker(members[i].coords.latlng, {title: members[i].userName, icon: new markerIcon({iconUrl: '../images/marker-yellow.png'}), opacity: 0.9}).addTo(map);
+				marker = L.marker(members[i].coords.latlng, {title: members[i].userName, icon: new markerIcon({iconUrl: '../images/marker-yellow.png'}), opacity: 0.9}).addTo(map);
 		    	marker.bindPopup('<b>' + members[i].userName + '</b><br>is within ' + radius.toFixed() + ' meters from this point');
-			    circle = L.circle(members[i].coords.latlng, radius, {color: 'yellow'}).addTo(map);
+				circle = L.circle(members[i].coords.latlng, radius, {color: 'yellow'}).addTo(map);
 		    	markers[members[i].userName] = {marker: marker, circle: circle};
 	    	}
-	    }
-	});
-}
-
-function prepareMap() {
-	map = L.map('map');
-	L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-		    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-		}).addTo(map);
+    	}
+	}
 }
 
 function geolocation() {
 	var setView = true;
 	var highAccuracy = true;
 
-	map.locate({watch: true, enableHighAccuracy: true, timeout:5000});
+	map.locate({watch: true, enableHighAccuracy: true, timeout: 5000});
 
 	//if the geolocation worked ->
 	map.on('locationfound', function onLocationFound(e){
+
+		//only apply the zoom one time!
 		if (setView == true) {
 			setView = false;
 			map.setView(e.latlng, 16);
@@ -311,17 +363,34 @@ function geolocation() {
 	map.on('locationerror', function onLocationError(e){			
 		//error codes: http://dev.w3.org/geo/api/spec-source.html#code
 
-		//if the error is timeout (code=3) then try with highAccuracy = false
-		if (e.code == 3 && highAccuracy == true) {
-				highAccuracy = false;
+		//PERMISSION_DENIED = 1;
+		if (e.code == 1) 
+			popUpMapError('The location acquisition process failed because the application does not have permission to use the Geolocation API. Please share your location enabling the "Location" option on your device.');
 
-				//default: (timeout = 10s, enableHighAccuracy: false)
-				map.locate({watch: true});
-			}
-		else { //generic error
-			map.fitWorld();	
-			L.popup().setLatLng([0, 0]).setContent(e.message).openOn(map);
+		//POSITION_UNAVAILABLE = 2;
+		else if (e.code == 2) 
+			popUpMapError('The position of the device could not be determined.');
+
+		//TIMEOUT = 3;
+		//trying not high accuracy geolocation
+		else if (e.code == 3 && highAccuracy == true) {
+			highAccuracy = false;
+
+			//default: (enableHighAccuracy: false)
+			map.locate({watch: true, timeout: 10000});
 		}
+		else if (e.code == 3 && highAccuracy == false) 
+			popUpMapError('Exceeded the timeout to find your location. Maybe you need share your location enabling the "Location" option on your device.');
+
+		//unknown error
+		else 
+			popUpMapError(e.message);
 	});
+}
+
+function popUpMapError(msg) {
+	map.fitWorld();	
+	msg += '<p>We recommend the use of a device that can access GPS satellites, Wi-Fi networks, and mobile networks.</p><p>We also recommend you use the latest stable version of browsers: Chrome, Firefox or Opera.</p>'
+	L.popup().setLatLng([0, 0]).setContent(msg).openOn(map);
 }
 });
