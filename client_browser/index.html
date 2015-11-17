@@ -4,16 +4,16 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; connect-src 'self' ws: ; img-src 'self' data: http://cdn.leafletjs.com *.tile.osm.org ; style-src 'self' https://cdnjs.cloudflare.com"> 
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; connect-src 'self' ws: ; img-src 'self' data: http://cdn.leafletjs.com *.tile.osm.org ; style-src 'self'"> 
 
 	<title>Iteración 4</title>
 	
 	<link rel="stylesheet" href="css/styles.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css">
+	<link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/Control.Loading.css" />
 </head>
 
 <body>
-
 	<div id="access">
 		<div id="newRoom">
 			<button>New Room</button>
@@ -79,7 +79,6 @@
 	<!--MAP-->
 	<div id="map"></div>
 
-
 	<!--CHAT-->
 	<section id="chat">
 		<div id ="chat_info">
@@ -112,6 +111,6 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.7/socket.io.min.js"></script>
  	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
 	<script src="js/client.js"></script>
-
+	<script src="js/Control.Loading.js"></script>
 </body>
 </html>

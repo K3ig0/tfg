@@ -297,7 +297,7 @@ function initRoom(members) {
 }
 
 function prepareMap() {
-	map = L.map('map');
+	map = L.map('map', {loadingControl: true});
 	L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 		    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 		}).addTo(map);
@@ -329,6 +329,7 @@ function updateMarkers(members) {
 function geolocation() {
 	var setView = true;
 	var highAccuracy = true;
+	var geolocatingLoader = initialLoader();	
 
 	map.locate({watch: true, enableHighAccuracy: true, timeout: 5000});
 
@@ -339,6 +340,7 @@ function geolocation() {
 		if (setView == true) {
 			setView = false;
 			map.setView(e.latlng, 16);
+			geolocatingLoader.removeFrom(map);
 		}
 
 		var radius = (e.accuracy / 2).toFixed();
@@ -360,7 +362,8 @@ function geolocation() {
 	});
 
 	//if the geolocation failed ->
-	map.on('locationerror', function onLocationError(e){			
+	map.on('locationerror', function onLocationError(e){		
+		geolocatingLoader.removeFrom(map);
 		//error codes: http://dev.w3.org/geo/api/spec-source.html#code
 
 		//PERMISSION_DENIED = 1;
@@ -386,6 +389,19 @@ function geolocation() {
 		else 
 			popUpMapError(e.message);
 	});
+}
+
+function initialLoader() {
+	var geolocatingLoader = L.control({position: 'topright'});
+
+	geolocatingLoader.onAdd = function() {
+		var div = L.DomUtil.create('div', 'geolocating');
+	    div.innerHTML = 'Attempting to find your location...';
+	    return div;
+    };
+	geolocatingLoader.addTo(map);
+
+	return geolocatingLoader;
 }
 
 function popUpMapError(msg) {
