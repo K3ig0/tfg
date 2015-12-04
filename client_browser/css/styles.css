@@ -4,32 +4,35 @@
 	box-sizing: border-box;
 }
 
-body { 
-	background: #aaa;
-	font: 13px Helvetica, Arial, sans-serif;
+body {
+	font: 13px Arial, Helvetica, sans-serif;
     color: #222;
+    background-color: #d8d8d8;
 }
 
 /***NEW / JOIN ROOM SCREEN ***/
 #access {
 	display: none;
 	float: left;
-    padding: 10%;
-    padding-left: 20%;
+    padding: 12.5% 0% 12.5% 25%;
 }
 
 #access button {
 	display: block;
 	width: 20vw;
-    margin-bottom: 4rem;
-    padding: 2rem;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    background: #f2f2f2;
-    letter-spacing: 1px;
-    font-size: 1rem;
+    margin-bottom: 15vh;
+    padding: 1.75rem;
+    background-color: #f2f2f2;
+  	border-radius: .25em;
+    text-shadow: 0 1px 1px hsla(0,0%,100%,.25);
+    font-size: 1.25rem;
     font-weight: bold;
-	border-style: outset;
-	border-width: 4px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+#access span {
+    float: right;
+    padding-right: 1rem;
 }
 
 /*** PUBLIC ROOMS ***/
@@ -39,7 +42,7 @@ body {
     width: 20vw;
     height: 60vh;
     margin: 8%;
-    margin-right: 20%;
+    margin-right: 25%;
     font-size: 0.9rem;
     text-align: left;
     overflow: auto;
@@ -57,7 +60,6 @@ body {
 
 a {
 	font-weight: bold;
-	color: #66ffff;
 }
 
 #publicRooms ul {
@@ -79,10 +81,13 @@ a {
 	top: 0;
 	position: absolute;
     width: 100%;
-    padding-top: 2.5%;
-    padding: 1%;
+    padding: 6% 20%;
     text-align: center;
     font-weight: bold;
+}
+
+.accessOptions p {
+	color: #aaa;
 }
 
 .accessOptions legend {
@@ -92,12 +97,19 @@ a {
 }
 
 .accessOptions button {
-    margin: 1rem auto;
+	width: 6rem;
+    margin: 1rem 0.5rem;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     text-align: center;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     background: #f2f2f2;
+}
+
+#new, #join {
+	background-color: #6fcf6f;
+	color: #f2f2f2;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
 .preForm {
@@ -137,13 +149,13 @@ a {
 	height: 35vh;
 	border-style: ridge;
 	border-width: 1px;
-	border-color: #aaa;
+	border-color: #ccc;
 }
 
 #chat_info {
+	background-color: #d8d8d8;
 	float: left;
 	padding: 5px 10px;
-	background: #aaa;
 	border-style: ridge;
 	border-color: #f2f2f2;
 }
@@ -157,7 +169,7 @@ a {
 #roomNumber {
 	padding-bottom: 1em;
 	font-weight: bold;
-	color: #f2f2f2;
+	color: #fff;
 	border-bottom: 1.5px dotted #ccc;
 }
 
@@ -176,7 +188,7 @@ a {
 }
 
 #messages { 
-	font: 14px Helvetica, Arial, sans-serif;
+	font: 14px Arial, Helvetica, sans-serif;
 }
 
 #messages li {
@@ -241,6 +253,7 @@ a {
 		width: 60vw;
 		padding: 5vh 0;
 		margin-bottom: 5vh;
+        font-size: 1rem;
 	}
 
 	#publicRooms {
@@ -259,6 +272,10 @@ a {
 		padding: 2.5vh 5vw;
 		line-height: 5vh;
 		text-align: center;
+	}
+
+	.accessOptions {
+		padding: 1%;
 	}
 
 	#map {

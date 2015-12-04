@@ -1,11 +1,11 @@
 var express = require('express'),
-	app = express(),
-	http = require('http').Server(app),
-	io = require('socket.io')(http),
-	port = 8988,
+    app = express(),
+    http = require('http').Server(app),
+    io = require('socket.io')(http),
+    port = 8988,
 
-	rooms = [],
-	publicRooms = [];
+    rooms = [],
+    publicRooms = [];
 
 
 //express.static is a middleware to serve files
@@ -13,7 +13,7 @@ app.use('/', express.static(__dirname + '/client_browser'));
 
 //join room directly from a link
 app.get('/[A-Za-z0-9]{2,10}$', function(req, res) {
-	res.sendFile(__dirname + '/client_browser/index.html');
+    res.sendFile(__dirname + '/client_browser/index.html');
 });
 
 //server listening port
@@ -21,153 +21,169 @@ http.listen(port, function () {
   console.log('Server listening goes on localhost listening at port: %s', port);
 });
 
+
 //handling events
 io.on('connection', function(socket){
 
-	//join initial room
-	socket.join(0);
+    //join initial room
+    socket.join(0);
 
-	//list of public rooms is sent to the user, <public rooms> event
-	if (publicRooms.length > 0)
-		socket.emit('public rooms', publicRooms);
+    //list of public rooms is sent to the user, <public rooms> event
+    if (publicRooms.length > 0)
+        socket.emit('public rooms', publicRooms);
 
-	//*** NEW ROOM ***
-	//when a client emits 'new room'
-	socket.on('new room', function(userName, roomName, exposure){
-		var roomId;
+    //*** NEW ROOM ***
+    //when a client emits 'new room'
+    socket.on('new room', function(userName, roomName, exposure){
+        var roomId;
 
-		if (roomName != null)
-			roomId = roomName;
-		else
-			//generating a room id
-			roomId = randomAlphanumeric(5);
+        if (roomName != null)
+            roomId = roomName;
+        else
+            //generating a room id
+            roomId = randomAlphanumeric(5);
 
-		//if the room id already exists -> generate a new id
-		while (rooms[roomId] != undefined)
-			if (roomName == null)
-				roomId = randomAlphanumeric(5);
-			else {
-				//roomName already exists!
-				socket.emit ('created room', false);
-				return;
-			}
+        //if the room id already exists -> generate a new id
+        while (rooms[roomId] != undefined)
+            if (roomName == null)
+                roomId = randomAlphanumeric(5);
+            else {
+                //roomName already exists!
+                socket.emit ('created room', false);
+                return;
+            }
 
-		//leave initial room
-		socket.leave(0);
+        //leave initial room
+        socket.leave(0);
 
-		//store the username in the socket session for this client
-		socket.userName = userName;
+        //store the username in the socket session for this client
+        socket.userName = userName;
 
-		//store the room name in the socket session for this client
-		socket.roomId = roomId;
+        //store the room name in the socket session for this client
+        socket.roomId = roomId;
 
-		//add the room info to the global list
-		rooms[roomId] = {
-			members: [{userName: userName, coords: undefined}],
-			exposure: exposure
-		};
+        //add the room info to the global list
+        rooms[roomId] = {
+            members: [{userName: userName, coords: undefined}],
+            exposure: exposure
+        };
 
-		//send client to the new room
-		socket.join(roomId);
+        //send client to the new room
+        socket.join(roomId);
 
-		//send client his room id
-		socket.emit('created room', roomId);
+        //send client his room id
+        socket.emit('created room', roomId);
 
-		//if the room will be public
-		if (exposure == 0) {
-			//add the room id generated to the public list
-			publicRooms.push(roomId);
+        //if the room will be public
+        if (exposure == 0) {
+            //add the room id generated to the public list
+            publicRooms.push(roomId);
 
-			//echo to everyone that a new public room has been created
-			socket.broadcast.to(0).emit('public rooms', [roomId]);
-		}
-	});
+            //echo to everyone that a new public room has been created
+            socket.broadcast.to(0).emit('public rooms', [roomId]);
+        }
+    });
 
-	//*** JOIN ROOM ***
-	//when a client emits 'join room'
-	socket.on('join room', function(userName, roomId){
-		//roomName not found
-		if (rooms[roomId] == undefined) {
-			socket.emit('joined room', 1);
-			return;
-		}
-		//userName already exists? unique?
-		else if (findMember(roomId, userName) != -1) {
-			socket.emit('joined room', 0);
-			return;
-		}
 
-		//leave initial room
-		socket.leave(0);
+    //*** JOIN ROOM ***
+    //when a client emits 'join room'
+    socket.on('join room', function(userName, roomId){
+        //roomName not found
+        if (rooms[roomId] == undefined) {
+            socket.emit('joined room', 1);
+            return;
+        }
+        //userName already exists? unique?
+        else if (findMember(roomId, userName) != -1) {
+            socket.emit('joined room', 0);
+            return;
+        }
 
-		//store the username in the socket session for this client
-		socket.userName = userName;
+        //leave initial room
+        socket.leave(0);
 
-		//store the room name in the socket session for this client
-		socket.roomId = roomId;
+        //store the username in the socket session for this client
+        socket.userName = userName;
 
-		//add the user to the list of members of the room in the rooms global list
-		rooms[roomId]['members'].push({userName: userName, coords: undefined});
+        //store the room name in the socket session for this client
+        socket.roomId = roomId;
 
-		//send client to the new room
-		socket.join(roomId);
+        //add the user to the list of members of the room in the rooms global list
+        rooms[roomId]['members'].push({userName: userName, coords: undefined});
 
-		//send client room data
-		socket.emit('joined room', roomId, rooms[roomId]['members']);
+        //send client to the new room
+        socket.join(roomId);
 
-		//echo to room's client that a new member has connected
-		socket.broadcast.to(roomId).emit('new user', userName);
-	});
+        //send client room data
+        socket.emit('joined room', roomId, rooms[roomId]['members']);
 
-	//*** COORDS EXCHANGE (geolocation) ***
-	//when a client (member) emits 'coords'
-	socket.on('coords', function(coords){
-		//this client is a member?
-		if (socket.roomId != undefined) {
-			//Debug
-			console.log('User: %s --> lat: %s / lng: %s / acc: %s', socket.userName, coords.latlng.lat, coords.latlng.lng, coords.acc);
-			
-			//send the client name and coords to the members of his room
-			socket.broadcast.to(socket.roomId).emit('member coords', [{userName: socket.userName, coords: coords}]);
+        //echo to room's client that a new member has connected
+        socket.broadcast.to(roomId).emit('new user', userName);
+    });
 
-			//store my coords in the members list
-			rooms[socket.roomId]['members'][findMember(socket.roomId, socket.userName)].coords = coords;
-		}
-	});
 
-	//when the client emits 'chat message'
-	socket.on('chat message', function(msg){
-		//sends this message to everyone except the client (broadcast)
-		socket.broadcast.to(socket.roomId).emit('chat message', '<b>' + socket.userName + ':</b> ' + msg);
-  	});
+    //*** COORDS EXCHANGE (geolocation) ***
+    //when a client (member) emits 'coords'
+    socket.on('coords', function(coords){
+        //this client is a member?
+        if (socket.roomId != undefined) {
+            //Debug
+            console.log('User: %s --> lat: %s / lng: %s / acc: %s', socket.userName, coords.latlng.lat, coords.latlng.lng, coords.acc);
+            
+            //send the client name and coords to the members of his room
+            socket.broadcast.to(socket.roomId).emit('member coords', [{userName: socket.userName, coords: coords}]);
 
-	socket.on('disconnect', function(){
-		if (socket.roomId != undefined) {
-			var pos = findMember(socket.roomId, socket.userName);
+            //store my coords in the members list
+            rooms[socket.roomId]['members'][findMember(socket.roomId, socket.userName)].coords = coords;
+        }
+    });
 
-			//removes the member of the room
-			rooms[socket.roomId]['members'].splice(pos, 1);
-			
-			//if the room has at least one member -> broadcast 'user disconnected'; else remove the room
-			if (rooms[socket.roomId]['members'].length > 0)
-				socket.broadcast.to(socket.roomId).emit('user disconnected', socket.userName, pos);	
-			else {
-				if (rooms[socket.roomId]['exposure'] == 0) {
-					var roomPublicPos = publicRooms.indexOf(socket.roomId);
-					publicRooms.splice(roomPublicPos, 1);
-					io.emit('remove public room', roomPublicPos);
-				}
-				delete(rooms[socket.roomId]);
-			}
-			socket.leave(socket.roomId);
-		}
-	});
+
+    //*** SUGGESTED MEETING POINT MARKERS ***
+    //when a member send a suggested meeting point to his room
+    socket.on('suggested point', function(latlng){
+        socket.broadcast.to(socket.roomId).emit('suggested point', socket.userName, latlng);
+    });
+
+
+    //*** CHAT MESSAGE ***
+    //when the client emits 'chat message'
+    socket.on('chat message', function(msg){
+        //sends this message to everyone except the client (broadcast)
+        socket.broadcast.to(socket.roomId).emit('chat message', '<b>' + socket.userName + ':</b> ' + msg);
+      });
+
+
+
+    //*** AUTO DISCONNECTION handling ***
+    //when the clients close the web application
+    socket.on('disconnect', function(){
+        if (socket.roomId != undefined) {
+            var pos = findMember(socket.roomId, socket.userName);
+
+            //removes the member of the room
+            rooms[socket.roomId]['members'].splice(pos, 1);
+            
+            //if the room has at least one member -> broadcast 'user disconnected'; else remove the room
+            if (rooms[socket.roomId]['members'].length > 0)
+                socket.broadcast.to(socket.roomId).emit('user disconnected', socket.userName, pos);    
+            else {
+                if (rooms[socket.roomId]['exposure'] == 0) {
+                    var roomPublicPos = publicRooms.indexOf(socket.roomId);
+                    publicRooms.splice(roomPublicPos, 1);
+                    io.emit('remove public room', roomPublicPos);
+                }
+                delete(rooms[socket.roomId]);
+            }
+            socket.leave(socket.roomId);
+        }
+    });
 });
 
 
 //generates a random alphanumeric string of 'n' length
 function randomAlphanumeric(n) {
-    var id = '';
+	var id = '';
     var domain = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     for (var i=0; i < n; i++)
@@ -178,9 +194,9 @@ function randomAlphanumeric(n) {
 
 //find a member of the room X given his userName
 function findMember(roomId, userName) { 
-	for (var i = 0; i < rooms[roomId]['members'].length; i++) {
-		if (rooms[roomId]['members'][i].userName == userName) 
-			return i;	
-	}
-	return -1;
+    for (var i = 0; i < rooms[roomId]['members'].length; i++) {
+        if (rooms[roomId]['members'][i].userName == userName) 
+            return i;    
+    }
+    return -1;
 }

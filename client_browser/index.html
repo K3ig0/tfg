@@ -2,115 +2,124 @@
 
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; connect-src 'self' ws: ; img-src 'self' data: http://cdn.leafletjs.com *.tile.osm.org ; style-src 'self'"> 
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'none'; 
+        script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com api.mapbox.com; 
+        connect-src 'self' ws: wss:; 
+        img-src 'self' data: http://cdn.leafletjs.com *.tile.osm.org *.basemaps.cartocdn.com ; style-src 'self' netdna.bootstrapcdn.com api.mapbox.com; 
+        font-src netdna.bootstrapcdn.com"> 
 
-	<title>Iteración 4</title>
-	
-	<link rel="stylesheet" href="css/styles.css">
-	<link rel="stylesheet" href="css/leaflet.css">
-    <link rel="stylesheet" href="css/Control.Loading.css" />
+    <title>Iteración 5</title>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v0.0.4/leaflet.fullscreen.css">
+
 </head>
 
 <body>
-	<div id="access">
-		<div id="newRoom">
-			<button>New Room</button>
-		</div>
-		<div id="joinRoom">
-			<button>Join Room</button>
-		</div>
-	</div>
+    <div id="access">
+        <div id="newRoom">
+            <button>New &nbsp;Room<span>></span></button>
+        </div>
+        <div id="joinRoom">
+            <button>Join&nbsp;Room<span>></span></button>
+        </div>
+    </div>
 
     <div id="publicRooms">
-		<div><u>Public Rooms</u></div>
-		<p>No public rooms at this time</p>
-		<ul></ul>
-	</div>
-	
-	<div id="newOptions" class="accessOptions">
-		<fieldset>
-		<legend>New Room</legend>
-    	<div class="preForm">
-    		Your username:
-    	</div>
-		<div class="form">
-			<input class="inputUsername" type="text" placeholder="<Required>">
-		</div>
-    	<div class="preForm">
-    		Room name:
-		</div>
+        <div><u>Public Rooms</u></div>
+        <p>No public rooms at this time</p>
+        <ul></ul>
+    </div>
+    
+    <div id="newOptions" class="accessOptions">
+        <fieldset>
+        <legend>New Room</legend>
+        <div class="preForm">
+            Your username:
+        </div>
+        <div class="form">
+            <input class="inputUsername" type="text" placeholder="<Required>">
+        </div>
+        <div class="preForm">
+            Room name:
+        </div>
         <div class="form">
             <input class="inputRoom" type="text" placeholder="[Optional]" autocomplete="off" />
         </div>
-		<div class="form">
-			Room exposure: <select>
-				<option value="0" selected="selected">Public</option>
-				<option value="1">Unlisted</option>
-			</select>
-		</div>
-		</fieldset>
-		<button id="new">Create</button>
-		<button class="cancel">Cancel</button>
-	</div>
+        <div class="form">
+            Room exposure: <select>
+                <option value="0" selected="selected">Public</option>
+                <option value="1">Unlisted</option>
+            </select>
+        </div>
+        </fieldset>
+        <button class="cancel">Cancel</button>
+        <button id="new">Create!</button>
+    </div>
 
-	<div id="joinOptions" class="accessOptions">
-		<fieldset>
-		<legend>Join Room</legend>
-    	<div class="preForm">
-    		Your username:
-    	</div>
-		<div class="form">
-			<input class="inputUsername" type="text" placeholder="<Required>">
-		</div>
-    	<div class="preForm">
-    		Room id / name:
-		</div>
+    <div id="joinOptions" class="accessOptions">
+        <fieldset>
+        <legend>Join Room</legend>
+        <div class="preForm">
+            Your username:
+        </div>
+        <div class="form">
+            <input class="inputUsername" type="text" placeholder="<Required>">
+        </div>
+        <div class="preForm">
+            Room id / name:
+        </div>
         <div class="form">
             <input class="inputRoom" type="text" placeholder="<Required>" autocomplete="off" />
         </div>
-		</fieldset>
-		<button id="join">Join</button>
-		<button class="cancel">Cancel</button>
-	</div>
+        </fieldset>
+        <button class="cancel">Cancel</button>
+        <button id="join">Join!</button>
+    </div>
 
 
-	<!--MAP-->
-	<div id="map"></div>
+    <!--MAP-->
+    <div id="map"></div>
 
-	<!--CHAT-->
-	<section id="chat">
-		<div id ="chat_info">
-			<p>Room:</p>
-			<div id="roomNumber"></div>
-			<p>Members:</p>
-			<ul id="members"></ul>
-		</div>
+    <!--CHAT-->
+    <section id="chat">
+        <div id ="chat_info">
+            <p>Room:</p>
+            <div id="roomNumber"></div>
+            <p>Members:</p>
+            <ul id="members"></ul>
+        </div>
 
-		<div id="conversation">
-	    	<ul id="messages"></ul>
-		</div>
+        <div id="conversation">
+            <ul id="messages"></ul>
+        </div>
 
-		<!--Write a chat message-->
-		<div id="chatBar">
-	     	<input id="inputMsg" type="text" placeholder="Write your message here and press <Enter>..." autocomplete="off" />
-	    </div>
-	</section>
+        <!--Write a chat message-->
+        <div id="chatBar">
+             <input id="inputMsg" type="text" placeholder="Write your message here and press <Enter>..." autocomplete="off" />
+        </div>
+    </section>
 
 
-	<!--Mobile and Tablet to switch between map and chat-->
-	<div id="switchButtons">
-		<button id="showMapButton">Show Map</button>
-		<button id="showChatButton">Show Chat</button>
-	</div>
+    <!--Mobile and Tablet to switch between map and chat-->
+    <div id="switchButtons">
+        <button id="showMapButton">Show Map</button>
+        <button id="showChatButton">Show Chat</button>
+    </div>
 
 
     <!--JavaScript dependencies-->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.7/socket.io.min.js"></script>
- 	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
-	<script src="js/client.js"></script>
-	<script src="js/Control.Loading.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.7/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v0.0.4/Leaflet.fullscreen.min.js'></script>
+    <script src="js/client.js"></script>
+    <script src="js/Control.Loading.js"></script>
+    <script src="js/easy-button.js"></script>
 </body>
 </html>
