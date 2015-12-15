@@ -65,7 +65,8 @@ io.on('connection', function(socket){
         //add the room info to the global list
         rooms[roomId] = {
             members: [{userName: userName, coords: undefined}],
-            exposure: exposure
+            exposure: exposure,
+            meeting_points: []
         };
 
         //send client to the new room
@@ -115,7 +116,7 @@ io.on('connection', function(socket){
         socket.join(roomId);
 
         //send client room data
-        socket.emit('joined room', roomId, rooms[roomId]['members']);
+        socket.emit('joined room', roomId, rooms[roomId]['members'], rooms[roomId]['meeting_points']);
 
         //echo to room's client that a new member has connected
         socket.broadcast.to(roomId).emit('new user', userName);
@@ -139,13 +140,6 @@ io.on('connection', function(socket){
     });
 
 
-    //*** SUGGESTED MEETING POINT MARKERS ***
-    //when a member send a suggested meeting point to his room
-    socket.on('suggested point', function(latlng){
-        socket.broadcast.to(socket.roomId).emit('suggested point', socket.userName, latlng);
-    });
-
-
     //*** CHAT MESSAGE ***
     //when the client emits 'chat message'
     socket.on('chat message', function(msg){
@@ -153,6 +147,38 @@ io.on('connection', function(socket){
         socket.broadcast.to(socket.roomId).emit('chat message', '<b>' + socket.userName + ':</b> ' + msg);
       });
 
+
+    //*** SUGGESTED MEETING POINT MARKERS ***
+    //when a member send a suggested meeting point to his room
+    socket.on('suggested point', function(latlng){
+        socket.broadcast.to(socket.roomId).emit('suggested point', socket.userName, latlng);
+
+        //store the meeting point received in the room data
+        rooms[socket.roomId]['meeting_points'].push({userName: socket.userName, latlng: latlng, votes: 1});
+    });
+
+    socket.on('remove suggested point', function(latlng){
+        socket.broadcast.to(socket.roomId).emit('remove suggested point', socket.userName, latlng);
+
+        //removes the meeting point in the room data
+        rooms[socket.roomId]['meeting_points'].splice(findMeetingPoint(socket.roomId, latlng), 1);
+    });
+
+
+    //*** VOTING MEETING POINTS ***
+    socket.on('vote meeting point', function(latlng){
+        socket.broadcast.to(socket.roomId).emit('vote meeting point', socket.userName, latlng);
+
+        //store the vote received in the associated meeting point
+        rooms[socket.roomId]['meeting_points'][findMeetingPoint(socket.roomId, latlng)].votes++;
+    });
+
+    socket.on('unvote meeting point', function(latlng){
+        socket.broadcast.to(socket.roomId).emit('unvote meeting point', socket.userName, latlng);
+
+        //store the vote received in the associated meeting point
+        rooms[socket.roomId]['meeting_points'][findMeetingPoint(socket.roomId, latlng)].votes--;
+    });
 
 
     //*** AUTO DISCONNECTION handling ***
@@ -192,10 +218,22 @@ function randomAlphanumeric(n) {
     return id;
 }
 
+
 //find a member of the room X given his userName
 function findMember(roomId, userName) { 
     for (var i = 0; i < rooms[roomId]['members'].length; i++) {
         if (rooms[roomId]['members'][i].userName == userName) 
+            return i;    
+    }
+    return -1;
+}
+
+
+//find a member of the room X given his userName
+function findMeetingPoint(roomId, latlng) { 
+    for (var i = 0; i < rooms[roomId]['meeting_points'].length; i++) {
+        if (rooms[roomId]['meeting_points'][i].latlng.lat == latlng.lat
+            && rooms[roomId]['meeting_points'][i].latlng.lng == latlng.lng)
             return i;    
     }
     return -1;

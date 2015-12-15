@@ -15,7 +15,7 @@ var markerIcon = L.Icon.extend({
     options: {
         shadowUrl: '../images/shadow-marker.png',
         iconSize: [25, 39],     // size of the icon
-        shadowSize: [41, 41],     // size of the shadow
+        shadowSize: [41, 41],   // size of the shadow
         iconAnchor:   [12, 36], // point of the icon which will correspond to marker's location
         shadowAnchor: [12, 38], // the same for the shadow
         popupAnchor: [0, -30]   // point from which the popup should open relative to the iconAnchor
@@ -23,7 +23,9 @@ var markerIcon = L.Icon.extend({
 });
 
 //suggesting meeting points
-var dest_marker, limit_dests = 0;
+var dest_marker;
+var limit_dests = 0;
+var suggested_meetings = {};
 var dragIcon = L.Icon.extend({
     options: {
         iconSize: [34, 45],     // size of the icon
@@ -65,7 +67,7 @@ window.onpopstate = function() {
 //resize event to adjust automatically according to the window resolution (only for testing in desktop computers)
 $(window).on('resize', function(){
     
-    //if not mobile device (this pattern is a Mozilla recommendation)
+    //if not mobile device (this pattern is a recommendation of Mozilla)
     if(!/Mobi/.test(navigator.userAgent)) {
 
         //if low window resolution
@@ -175,12 +177,12 @@ $('#join').click(function() {
         errorAccessOptions('The username must contain between 2 and 15 alphanumeric characters');
 });
 
-socket.on('joined room', function(code, members){
+socket.on('joined room', function(code, members, meeting_points){
     //if username and roomName are unique -> code = roomId
     if (code != 0 && code != 1) {
         history.pushState('join', 'Room: ' + code, '/' + code);
         onpopstate = true;
-        initRoom(members);
+        initRoom(members, meeting_points);
         $('#roomNumber').append($('<u>').text(code));
         for    (i = 0; i < members.length; i++) 
             $members.append($('<li>').text(members[i].userName));
@@ -255,7 +257,7 @@ function errorAccessOptions(str) {
 }
 
 
-function initRoom(members) {
+function initRoom(members, meeting_points) {
     initRoom_bool = true;
     $('.accessOptions').hide();
     $map.show();
@@ -271,8 +273,15 @@ function initRoom(members) {
     prepareMap();
     geolocation();
 
-    if (members != undefined) //dont do this after create a room
+    if (members != undefined) //dont do this if the function was called from create a room
         updateMarkers(members);
+
+    if (meeting_points != undefined) { //dont do this if the function was called from create a room
+        for (var m = 0; m < meeting_points.length; m++){
+            addMeetingPoint(meeting_points[m].userName, 
+                meeting_points[m].latlng, meeting_points[m].votes);
+        }
+    }
 
     //send a message pressing <Enter>
     $inputMsg.bind('enterKey',function(e){
@@ -334,9 +343,14 @@ function initRoom(members) {
 
     //receiving a meeting point suggested by a member
     socket.on('suggested point', function(userName, latlng){
-        new L.marker(latlng, {title: 'Meeting point suggested by ' + userName, icon: new destIcon({iconUrl: '../images/yellow-home.png'})})
-                .on('popupopen',onPopupOpen).addTo(map).bindPopup('<b>'+userName+'</b>'+' has suggested this meeting point.<p>Delete the suggested meeting point?</p><p><button class="marker-delete-member-yes">Yes</button><button class="marker-no">No</button></p>');
-        $('#messages').append($('<li>').html('<i><b>' + userName + '</b> has suggested a meeting point <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> [Click here]</i>'));
+        addMeetingPoint(userName, latlng);
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>suggested</b> a meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
+    });
+
+    socket.on('remove suggested point', function(userName, latlng){
+        map.removeLayer(suggested_meetings[latlng.lat+latlng.lng]);
+        delete suggested_meetings[latlng.lat+latlng.lng];
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>removed</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
     });
 
     //click here (chat message) to go the suggested meeting point (event delegation, is not present at the time DOM ready)
@@ -344,15 +358,30 @@ function initRoom(members) {
 
         // example: coords = [40.23134106086199,-7.89183105016199]
         var coords = $(this).attr('href');
-
+        var lat = coords.substring(2,coords.indexOf(','));
+        var lng = coords.substring(coords.indexOf(',')+1,coords.indexOf(']'));
         // if the device is mobile or tablet -->
         if ($map.css('bottom') == '0px') {
             $chat.hide();
             $map.show();
         }
 
-        map.panTo(new L.LatLng(coords.substring(2,coords.indexOf(',')), coords.substring(coords.indexOf(',')+1,coords.indexOf(']'))));
+        map.panTo(new L.LatLng(lat, lng));
+        //suggested_meetings[lat+lng].openPopup();
         return false;
+    });
+
+
+    //receiving voted meeting points
+    socket.on('vote meeting point', function(userName, latlng){
+        suggested_meetings[latlng.lat+latlng.lng].setPopupContent(updateVote(suggested_meetings[latlng.lat+latlng.lng].getPopup().getContent(), 1));
+        suggested_meetings[latlng.lat+latlng.lng].fire('popupopen');
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>voted</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
+    });
+    socket.on('unvote meeting point', function(userName, latlng){
+        suggested_meetings[latlng.lat+latlng.lng].setPopupContent(updateVote(suggested_meetings[latlng.lat+latlng.lng].getPopup().getContent(), -1));
+        suggested_meetings[latlng.lat+latlng.lng].fire('popupopen');
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>unvoted</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
     });
 }
 
@@ -551,21 +580,28 @@ function updateMarkers(members) {
 }
 
 
+function addMeetingPoint(userName, latlng, votes) {
+    var tempVotes;
+
+    if (votes == undefined)
+        tempVotes = 1;
+    else
+        tempVotes = votes;
+
+    suggested_meetings[latlng.lat+latlng.lng] = new L.marker(latlng, {title: 'Meeting point suggested by ' + userName, icon: new destIcon({iconUrl: '../images/yellow-home.png'})})
+                .on('popupopen',onPopupOpen).addTo(map).bindPopup('<b>'+userName+'</b>'+' has suggested this meeting point.<p>Votes: '+tempVotes+'<br>Do you want to vote it?</p><p><button class="marker-vote">Vote!</button></p>');
+}
+
+
 function geolocation() {
     var setView = true;
     var highAccuracy = true;
     var geolocatingLoader = initialLoader();    
 
-    map.locate({watch: true, enableHighAccuracy: true, timeout: 5000});
+    map.locate({watch: true, enableHighAccuracy: true, timeout: 5000, maximumAge: 10000});
 
     //if the geolocation worked ->
     map.on('locationfound', function onLocationFound(e){
-
-        if (last_position === [e.latlng, e.acc])
-            return;
-        else
-            last_position = [e.latlng, e.acc];
-
         //only apply the zoom one time!
         if (setView == true) {
             setView = false;
@@ -588,7 +624,11 @@ function geolocation() {
             markers[0].circle.addTo(map);
         }
 
-        socket.emit('coords', {latlng: e.latlng, acc: e.accuracy});
+        //avoid share the same last location
+        if (last_position == undefined || last_position.lat != e.latlng.lat || last_position.lng != e.latlng.lng) {
+            socket.emit('coords', {latlng: e.latlng, acc: e.accuracy});
+	    last_position = e.latlng;
+	}
     });
 
     //if the geolocation failed ->
@@ -645,15 +685,17 @@ function popUpMapError(msg) {
 }
 
 
-//Function to handle events on marker popup open
+//Function to handle events of opened marker popups
 function onPopupOpen() {
     var tempMarker = this;
 
     $('.marker-location-yes:visible').click(function () {
-        socket.emit('suggested point', tempMarker.getLatLng());
+        var latlng = tempMarker.getLatLng();
+        socket.emit('suggested point', latlng);
         map.removeLayer(tempMarker);
-        new L.marker(tempMarker.getLatLng(), {icon: new destIcon({iconUrl: '../images/blue-home.png'})})
-            .on('popupopen',onPopupOpen).addTo(map).bindPopup('Delete the suggested meeting point?<p><button class="marker-delete-yes">Yes</button><button class="marker-no">No</button></p>');
+        suggested_meetings[latlng.lat+latlng.lng] = new L.marker(latlng, {icon: new destIcon({iconUrl: '../images/blue-home.png'})})
+            .on('popupopen',onPopupOpen).addTo(map).bindPopup('Votes: 1</span><br>Do you want to vote/unvote this meeting point?<p><button class="marker-vote">Unvote!</button></p>Delete the suggested meeting point?<p><button class="marker-delete-yes">Yes</button><button class="marker-no">No</button></p>');
+        suggested_meetings[latlng.lat+latlng.lng].unvoted = true;
         limit_dests++;
         dest_marker = undefined;
     });
@@ -661,14 +703,38 @@ function onPopupOpen() {
     $('.marker-delete-yes:visible').click(function () {
         limit_dests--;
         map.removeLayer(tempMarker);
-    });
-
-    $('.marker-delete-member-yes:visible').click(function () {
-        map.removeLayer(tempMarker);
+        socket.emit('remove suggested point', tempMarker.getLatLng());
     });
 
     $('.marker-no:visible').click(function () {
         tempMarker.closePopup();
     });
+
+    $('.marker-vote:visible').click(function () {
+        var latlng = tempMarker.getLatLng();
+
+        if (suggested_meetings[latlng.lat+latlng.lng].unvoted) {
+            socket.emit('unvote meeting point', latlng);
+            suggested_meetings[latlng.lat+latlng.lng].unvoted = false;
+            tempMarker.setPopupContent(updateVote(tempMarker.getPopup().getContent(), -1).
+                replace(/Vote!|Unvote!/,function(match) {return (match=="Vote!")?"Unvote!":"Vote!";}));
+            tempMarker.fire('popupopen');
+        }
+        else {
+            socket.emit('vote meeting point', latlng);
+            suggested_meetings[latlng.lat+latlng.lng].unvoted = true;
+            tempMarker.setPopupContent(updateVote(tempMarker.getPopup().getContent(), 1).
+                replace(/Vote!|Unvote!/,function(match) {return (match=="Vote!")?"Unvote!":"Vote!";}));
+            tempMarker.fire('popupopen');
+        }
+    });
+}
+
+function updateVote(content, vote) {
+    var res = content.replace(/Votes: (\d+)/, function(match, number) {
+        var votes = parseInt(number)+vote;
+        return 'Votes: ' + votes;
+    });
+    return res;
 }
 });
