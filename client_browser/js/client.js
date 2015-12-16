@@ -609,7 +609,7 @@ function geolocation() {
             map.setView(e.latlng, 16);
         }
         if (geolocated == false) {
-            geolocated == true;
+            geolocated = true;
             geolocatingLoader.removeFrom(map);
         }
         var radius = (e.accuracy / 2).toFixed();
@@ -637,7 +637,7 @@ function geolocation() {
     //if the geolocation failed ->
     map.on('locationerror', function onLocationError(e) {
         if (geolocated == false) {
-            geolocated == true;
+            geolocated = true;
             geolocatingLoader.removeFrom(map);
         }
 
