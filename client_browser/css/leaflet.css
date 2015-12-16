@@ -600,10 +600,9 @@
     border-top-right-radius: 4px;
 }
 
-
 /* suggesting meeting points */
 
-.marker-location-yes, .marker-no, .marker-delete-yes, .marker-delete-member-yes {
+.marker-location-yes, .marker-no, .marker-delete-yes, .marker-vote {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
     background: white;
@@ -612,10 +611,15 @@
     border-radius: 5px;
 }
 
-.marker-location-yes, .marker-no, .marker-delete-yes, .marker-delete-member-yes {
+.marker-location-yes, .marker-no, .marker-delete-yes {
     width: 45%;
 }
 
 .marker-no {
     float: right;
+}
+
+.marker-vote {
+    text-align: center;
+    width: 90%;
 }
