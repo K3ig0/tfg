@@ -30,7 +30,7 @@ io.on('connection', function(socket){
 
     //list of public rooms is sent to the user, <public rooms> event
     if (publicRooms.length > 0)
-        socket.emit('public rooms', publicRooms);
+        socket.compress(false).emit('public rooms', publicRooms);
 
     //*** NEW ROOM ***
     //when a client emits 'new room'
@@ -49,7 +49,7 @@ io.on('connection', function(socket){
                 roomId = randomAlphanumeric(5);
             else {
                 //roomName already exists!
-                socket.emit ('created room', false);
+                socket.compress(false).emit ('created room', false);
                 return;
             }
 
@@ -73,7 +73,7 @@ io.on('connection', function(socket){
         socket.join(roomId);
 
         //send client his room id
-        socket.emit('created room', roomId);
+        socket.compress(false).emit('created room', roomId);
 
         //if the room will be public
         if (exposure == 0) {
@@ -81,7 +81,7 @@ io.on('connection', function(socket){
             publicRooms.push(roomId);
 
             //echo to everyone that a new public room has been created
-            socket.broadcast.to(0).emit('public rooms', [roomId]);
+            socket.compress(false).broadcast.to(0).emit('public rooms', [roomId]);
         }
     });
 
@@ -91,12 +91,12 @@ io.on('connection', function(socket){
     socket.on('join room', function(userName, roomId){
         //roomName not found
         if (rooms[roomId] == undefined) {
-            socket.emit('joined room', 1);
+            socket.compress(false).emit('joined room', 1);
             return;
         }
         //userName already exists? unique?
         else if (findMember(roomId, userName) != -1) {
-            socket.emit('joined room', 0);
+            socket.compress(false).emit('joined room', 0);
             return;
         }
 
@@ -116,10 +116,10 @@ io.on('connection', function(socket){
         socket.join(roomId);
 
         //send client room data
-        socket.emit('joined room', roomId, rooms[roomId]['members'], rooms[roomId]['meeting_points']);
+        socket.compress(false).emit('joined room', roomId, rooms[roomId]['members'], rooms[roomId]['meeting_points']);
 
         //echo to room's client that a new member has connected
-        socket.broadcast.to(roomId).emit('new user', userName);
+        socket.compress(false).broadcast.to(roomId).emit('new user', userName);
     });
 
 
@@ -132,7 +132,7 @@ io.on('connection', function(socket){
             console.log('User: %s --> lat: %s / lng: %s / acc: %s', socket.userName, coords.latlng.lat, coords.latlng.lng, coords.acc);
             
             //send the client name and coords to the members of his room
-            socket.broadcast.to(socket.roomId).emit('member coords', [{userName: socket.userName, coords: coords}]);
+            socket.compress(false).broadcast.to(socket.roomId).emit('member coords', [{userName: socket.userName, coords: coords}]);
 
             //store my coords in the members list
             rooms[socket.roomId]['members'][findMember(socket.roomId, socket.userName)].coords = coords;
@@ -144,21 +144,21 @@ io.on('connection', function(socket){
     //when the client emits 'chat message'
     socket.on('chat message', function(msg){
         //sends this message to everyone except the client (broadcast)
-        socket.broadcast.to(socket.roomId).emit('chat message', '<b>' + socket.userName + ':</b> ' + msg);
+        socket.compress(false).broadcast.to(socket.roomId).emit('chat message', '<b>' + socket.userName + ':</b> ' + msg);
       });
 
 
     //*** SUGGESTED MEETING POINT MARKERS ***
     //when a member send a suggested meeting point to his room
     socket.on('suggested point', function(latlng){
-        socket.broadcast.to(socket.roomId).emit('suggested point', socket.userName, latlng);
+        socket.compress(false).broadcast.to(socket.roomId).emit('suggested point', socket.userName, latlng);
 
         //store the meeting point received in the room data
         rooms[socket.roomId]['meeting_points'].push({userName: socket.userName, latlng: latlng, votes: 1});
     });
 
-    socket.on('remove suggested point', function(latlng){
-        socket.broadcast.to(socket.roomId).emit('remove suggested point', socket.userName, latlng);
+    socket.on('remove suggested point', function(latlng, mostVoted){
+        socket.compress(false).broadcast.to(socket.roomId).emit('remove suggested point', socket.userName, latlng, mostVoted);
 
         //removes the meeting point in the room data
         rooms[socket.roomId]['meeting_points'].splice(findMeetingPoint(socket.roomId, latlng), 1);
@@ -167,14 +167,14 @@ io.on('connection', function(socket){
 
     //*** VOTING MEETING POINTS ***
     socket.on('vote meeting point', function(latlng){
-        socket.broadcast.to(socket.roomId).emit('vote meeting point', socket.userName, latlng);
+        socket.compress(false).broadcast.to(socket.roomId).emit('vote meeting point', socket.userName, latlng);
 
         //store the vote received in the associated meeting point
         rooms[socket.roomId]['meeting_points'][findMeetingPoint(socket.roomId, latlng)].votes++;
     });
 
     socket.on('unvote meeting point', function(latlng){
-        socket.broadcast.to(socket.roomId).emit('unvote meeting point', socket.userName, latlng);
+        socket.compress(false).broadcast.to(socket.roomId).emit('unvote meeting point', socket.userName, latlng);
 
         //store the vote received in the associated meeting point
         rooms[socket.roomId]['meeting_points'][findMeetingPoint(socket.roomId, latlng)].votes--;
@@ -192,7 +192,7 @@ io.on('connection', function(socket){
             
             //if the room has at least one member -> broadcast 'user disconnected'; else remove the room
             if (rooms[socket.roomId]['members'].length > 0)
-                socket.broadcast.to(socket.roomId).emit('user disconnected', socket.userName, pos);    
+                socket.compress(false).broadcast.to(socket.roomId).emit('user disconnected', socket.userName, pos);    
             else {
                 if (rooms[socket.roomId]['exposure'] == 0) {
                     var roomPublicPos = publicRooms.indexOf(socket.roomId);
@@ -229,7 +229,7 @@ function findMember(roomId, userName) {
 }
 
 
-//find a member of the room X given his userName
+//find a meetingPoint of the room X given his latitude and longitude
 function findMeetingPoint(roomId, latlng) { 
     for (var i = 0; i < rooms[roomId]['meeting_points'].length; i++) {
         if (rooms[roomId]['meeting_points'][i].latlng.lat == latlng.lat

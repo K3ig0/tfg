@@ -1,45 +1,42 @@
- //document ready? ->
+//document ready? ->
 $(function() {
 
 //initialize socket.io
 var socket = io();
 
 var userName = '';
+var fullScreen_bool;
 var initRoom_bool = false;
 var onpopstate = false;
 
 //map variables
-var map, last_position;
+var map, last_position, fitWorld = false;
 var markers = {};
 var markerIcon = L.Icon.extend({
     options: {
         shadowUrl: '../images/shadow-marker.png',
-        iconSize: [25, 39],     // size of the icon
-        shadowSize: [41, 41],   // size of the shadow
-        iconAnchor:   [12, 36], // point of the icon which will correspond to marker's location
-        shadowAnchor: [12, 38], // the same for the shadow
-        popupAnchor: [0, -30]   // point from which the popup should open relative to the iconAnchor
+        iconSize:     [25, 39],  // size of the icon
+        shadowSize:   [41, 41],  // size of the shadow
+        iconAnchor:   [12, 36],  // point of the icon which will correspond to marker's location
+        shadowAnchor: [12, 38],  // the same for the shadow
+        popupAnchor:  [0, -30]   // point from which the popup should open relative to the iconAnchor
     }
 });
 
-//suggesting meeting points
-var dest_marker;
+//meeting points
+var dest_marker, mostVoted;
 var limit_dests = 0;
-var suggested_meetings = {};
+var suggested_meetings = {group: new L.featureGroup([])};
 var dragIcon = L.Icon.extend({
-    options: {
-        iconSize: [34, 45],     // size of the icon
-        iconAnchor:   [12, 36], // point of the icon which will correspond to marker's location
-        popupAnchor: [0, -30]   // point from which the popup should open relative to the iconAnchor
-    }
+    options: {iconSize: [34, 45], iconAnchor: [15, 40], popupAnchor: [0, -30]}
 });
 
 var destIcon = L.Icon.extend({
-    options: {
-        iconSize: [35, 42],     // size of the icon
-        iconAnchor:   [12, 36], // point of the icon which will correspond to marker's location
-        popupAnchor: [0, -30]   // point from which the popup should open relative to the iconAnchor
-    }
+    options: {iconSize: [35, 42], iconAnchor: [18, 40], popupAnchor: [0, -30]}
+});
+
+var mostVotedIcon = L.Icon.extend({
+    options: {iconSize: [49, 58], iconAnchor: [25, 55], popupAnchor: [0, -30]}
 });
 
 //caching elements we'll use multiple times
@@ -66,23 +63,22 @@ window.onpopstate = function() {
 
 //resize event to adjust automatically according to the window resolution (only for testing in desktop computers)
 $(window).on('resize', function(){
-    
-    //if not mobile device (this pattern is a recommendation of Mozilla)
-    if(!/Mobi/.test(navigator.userAgent)) {
-
-        //if low window resolution
-        if ($map.css('bottom') == '0px' && initRoom_bool) {
+    //if low window resolution
+    if ($map.css('bottom') == '0px' && initRoom_bool) {
+        if (!/Mobi/.test(navigator.userAgent) || $chat.css('display') == 'none' || fullScreen_bool) {
+            fullScreen_bool = false;
             $chat.hide();
             $('#switchButtons').css('display','inline');
             $map.show();
             $showMapButton.css('font-weight', 'bold');
             $showChatButton.css('font-weight', 'normal');
         }
-        else if (initRoom_bool) {
-            $('#switchButtons').hide();
-            $map.show();
-            $chat.show();
-        }
+    }
+    else if (initRoom_bool) {
+        fullScreen_bool = true;
+        $('#switchButtons').hide();
+        $map.show();
+        $chat.show();
     }
 });
 
@@ -124,34 +120,36 @@ $('#newOptions .inputUsername, #newOptions .inputRoom').keyup(function(e) {
 });
 //creating a room
 $('#new').click(function() {
+    $(this).prop("disabled", true); 
     var roomName = $('#newOptions .inputRoom').val();
     userName = $('#newOptions .inputUsername').val();
 
     //alphanumeric usernames [2-15] length
     if (/^[A-Za-z0-9]{2,15}$/.test(userName)) {
         if (/^[A-Za-z0-9]{2,10}$/.test(roomName))
-            socket.emit('new room', userName, roomName, $('#newOptions select').val());
+            socket.compress(false).emit('new room', userName, roomName, $('#newOptions select').val());
         else if (roomName == null || roomName == '')
-            socket.emit('new room', userName, null, $('#newOptions select').val());
-        else {
-            errorAccessOptions('The room name must contain between 2 and 10 alphanumeric characters');
-            return;
-        }
+            socket.compress(false).emit('new room', userName, null, $('#newOptions select').val());
+        else 
+            errorAccessOptions('The room name must contain between 2 and 10 alphanumeric characters', '#new');
     } else
-        errorAccessOptions('The username must contain between 2 and 15 alphanumeric characters');
+        errorAccessOptions('The username must contain between 2 and 15 alphanumeric characters', '#new');
 });
 
 socket.on('created room', function(roomId){
     //if the roomName is not exists
     if (roomId != false) {
-        history.pushState('create', 'Room: ' + roomId, '/' + roomId);
-        onpopstate = true;
+        //support HTML5 - History
+        if (window.history && window.history.pushState) {
+            history.pushState('create', 'Room: ' + roomId, '/' + roomId);
+            onpopstate = true;
+        }
         initRoom();
-        $('#roomNumber').append($('<u>').text(roomId));
+        $('#roomNumber').text(roomId);
         $members.append($('<li>').text(userName));
     }
     else
-        errorAccessOptions('This room name already exists');
+        errorAccessOptions('This room name already exists', '#new');
 });
 
 
@@ -162,35 +160,37 @@ $('#joinOptions .inputUsername, #joinOptions .inputRoom').keyup(function(e) {
 });
 //joining a room
 $('#join').click(function() {
+    $(this).prop("disabled", true);
     var roomName = $('#joinOptions .inputRoom').val();
     userName = $('#joinOptions .inputUsername').val();
 
     //alphanumeric usernames [2-15] length
     if (/^[A-Za-z0-9]{2,15}$/.test(userName)) {
         if (/^[A-Za-z0-9]{2,10}$/.test(roomName))
-            socket.emit('join room', userName, roomName);
-        else {
-            errorAccessOptions('The room name must contain between 2 and 10 alphanumeric characters');
-            return;
-        }
+            socket.compress(false).emit('join room', userName, roomName);
+        else
+            errorAccessOptions('The room name must contain between 2 and 10 alphanumeric characters', '#join');
     } else
-        errorAccessOptions('The username must contain between 2 and 15 alphanumeric characters');
+        errorAccessOptions('The username must contain between 2 and 15 alphanumeric characters', '#join');
 });
 
 socket.on('joined room', function(code, members, meeting_points){
     //if username and roomName are unique -> code = roomId
     if (code != 0 && code != 1) {
-        history.pushState('join', 'Room: ' + code, '/' + code);
-        onpopstate = true;
+        //support HTML5 - History
+        if (window.history && window.history.pushState) {
+            history.pushState('join', 'Room: ' + code, '/' + code);
+            onpopstate = true;
+        }
         initRoom(members, meeting_points);
-        $('#roomNumber').append($('<u>').text(code));
-        for    (i = 0; i < members.length; i++) 
+        $('#roomNumber').text(code);
+        for (i = 0; i < members.length; i++) 
             $members.append($('<li>').text(members[i].userName));
     }
     else if (code == 0)
-        errorAccessOptions('This username already exists');
+        errorAccessOptions('This username already exists', '#join');
     else if (code == 1)
-        errorAccessOptions('Room not found');
+        errorAccessOptions('Room not found', '#join');
 });
 
 
@@ -199,7 +199,9 @@ $('.cancel').click(function() {
     var pos = url.lastIndexOf('/');
     var id = url.substring(pos + 1);
     if (id != '')
-        history.replaceState('', 'init', '/');
+        //support HTML5 - History
+        if (window.history && window.history.replaceState)
+            history.replaceState('', 'init', '/');
 
     $('.accessOptions').hide();
     $('.accessOptions input').val('');
@@ -246,9 +248,10 @@ function joinUriId() {
 }
 
 
-function errorAccessOptions(str) {
+function errorAccessOptions(str, caller) {
     var parent = '#newOptions';
-    if ($('#joinOptions').css('display') == 'block')
+    $(caller).prop("disabled", false);
+    if (caller.localeCompare('#join') == 0)
         parent = '#joinOptions';
     if ($(parent + ' p:first').html() == null)
         $(parent).prepend($('<p>').text(str));
@@ -277,10 +280,15 @@ function initRoom(members, meeting_points) {
         updateMarkers(members);
 
     if (meeting_points != undefined) { //dont do this if the function was called from create a room
-        for (var m = 0; m < meeting_points.length; m++){
+        var highVoted = {votes: 0};
+        for (var m = 0; m < meeting_points.length; m++) {
             addMeetingPoint(meeting_points[m].userName, 
                 meeting_points[m].latlng, meeting_points[m].votes);
+            if (meeting_points[m].votes > highVoted.votes)
+                highVoted = {latlng: meeting_points[m].latlng, votes: meeting_points[m].votes};
         }
+        if (highVoted.latlng != undefined)
+            newMostVotedMeeting(highVoted.latlng.lat, highVoted.latlng.lng);
     }
 
     //send a message pressing <Enter>
@@ -291,7 +299,7 @@ function initRoom(members, meeting_points) {
         if (jQuery.trim(msg).length != 0) {
 
                //send the event 'chat message' to the server
-            socket.emit('chat message', msg);
+            socket.compress(false).emit('chat message', msg);
 
             //append the message to the list
             $messages.append($('<li>').html('<b>' + userName + ':</b> ' + msg));
@@ -300,7 +308,8 @@ function initRoom(members, meeting_points) {
             $inputMsg.val('');
 
             //scroll automatically to the written message
-            $('#conversation').animate({scrollTop: $('#messages li:last-child').position().top + $('#messages li:last-child').height()});
+            if ($('#conversation').height <= $messages.height)
+                $('#conversation').prop({scrollTop: $messages.height()});
         }
     });
     $inputMsg.keyup(function(e) {
@@ -344,13 +353,37 @@ function initRoom(members, meeting_points) {
     //receiving a meeting point suggested by a member
     socket.on('suggested point', function(userName, latlng){
         addMeetingPoint(userName, latlng);
+        checkMostVotedMeeting(latlng.lat, latlng.lng);
         $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>suggested</b> a meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
     });
-
-    socket.on('remove suggested point', function(userName, latlng){
+    socket.on('remove suggested point', function(userName, latlng, mostVotedReceived){
         map.removeLayer(suggested_meetings[latlng.lat+latlng.lng]);
+        suggested_meetings.group.removeLayer(suggested_meetings[latlng.lat+latlng.lng]);
         delete suggested_meetings[latlng.lat+latlng.lng];
-        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>removed</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
+        if (mostVotedReceived != undefined) {
+            suggested_meetings[mostVotedReceived].setIcon(new mostVotedIcon({iconUrl: '../images/green-home.png'}));
+            mostVoted = mostVotedReceived;
+        }
+        else if (latlng.lat+latlng.lng == mostVoted)
+            mostVoted = undefined;
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>removed</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));        
+    });
+
+    //receiving voted meeting points
+    socket.on('vote meeting point', function(userName, latlng){
+        suggested_meetings[latlng.lat+latlng.lng].setPopupContent(updateVote(suggested_meetings[latlng.lat+latlng.lng].getPopup().getContent(), 1));
+        suggested_meetings[latlng.lat+latlng.lng].votes++;
+        suggested_meetings[latlng.lat+latlng.lng].fire('popupopen');
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>voted</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
+        checkMostVotedMeeting(latlng.lat, latlng.lng);
+    });
+    socket.on('unvote meeting point', function(userName, latlng){
+        suggested_meetings[latlng.lat+latlng.lng].setPopupContent(updateVote(suggested_meetings[latlng.lat+latlng.lng].getPopup().getContent(), -1));
+        suggested_meetings[latlng.lat+latlng.lng].votes--;
+        suggested_meetings[latlng.lat+latlng.lng].fire('popupopen');
+        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>unvoted</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
+        if (latlng.lat+latlng.lng == mostVoted)
+            findMostVotedMeeting();
     });
 
     //click here (chat message) to go the suggested meeting point (event delegation, is not present at the time DOM ready)
@@ -367,27 +400,13 @@ function initRoom(members, meeting_points) {
         }
 
         map.panTo(new L.LatLng(lat, lng));
-        //suggested_meetings[lat+lng].openPopup();
         return false;
-    });
-
-
-    //receiving voted meeting points
-    socket.on('vote meeting point', function(userName, latlng){
-        suggested_meetings[latlng.lat+latlng.lng].setPopupContent(updateVote(suggested_meetings[latlng.lat+latlng.lng].getPopup().getContent(), 1));
-        suggested_meetings[latlng.lat+latlng.lng].fire('popupopen');
-        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>voted</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
-    });
-    socket.on('unvote meeting point', function(userName, latlng){
-        suggested_meetings[latlng.lat+latlng.lng].setPopupContent(updateVote(suggested_meetings[latlng.lat+latlng.lng].getPopup().getContent(), -1));
-        suggested_meetings[latlng.lat+latlng.lng].fire('popupopen');
-        $messages.append($('<li>').html('<i><b>' + userName + '</b> has <b>unvoted</b> the meeting point: <a class="dest_coords" href="#[' + latlng.lat + ',' + latlng.lng + ']"> ['+latlng.lat.toFixed(4)+', '+latlng.lng.toFixed(4)+']</i>'));
     });
 }
 
 
 function prepareMap() {
-    var osm_tileLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    var osm_tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
     });
 
@@ -418,12 +437,14 @@ function prepareMap() {
                     type: 'replace',          // set to animate when you're comfy with css
                     leafletClasses: true,     // use leaflet classes to style the button?
                     states:[{                 // specify different icons and responses for your button
-                        stateName: 'get-myposition',
+                        stateName: 'default',
                         onClick: function(){
                             if (markers[0] != undefined)
                                 map.setView(markers[0].marker.getLatLng(), 16);
+                            else
+                                L.popup().setLatLng(map.getCenter()).setContent('You must share your location to use this feature.').openOn(map);
                         },
-                        title: 'Focus on my marker',
+                        title: 'Focus on my position',
                         icon: 'fa-user fa-lg'
                     }]
                 });
@@ -435,22 +456,44 @@ function prepareMap() {
                     type: 'replace',          // set to animate when you're comfy with css
                     leafletClasses: true,     // use leaflet classes to style the button?
                     states:[{                 // specify different icons and responses for your button
-                        stateName: 'get-positionMembers',
+                        stateName: 'default',
                         onClick: function(){
-                            if (markers[0] != undefined) {
-                                var allMarkers = [];
-                                $('#members').find('li').each(function() {
-                                    if ($(this).text() != userName && markers[$(this).text()] != undefined)
-                                        allMarkers.push(markers[$(this).text()].marker);
-                                    else
-                                        allMarkers.push(markers[0].marker)
-                                });
+                            var allMarkers = [];
+                            $('#members').find('li').each(function() {
+                                if ($(this).text() != userName && markers[$(this).text()] != undefined)
+                                    allMarkers.push(markers[$(this).text()].marker);
+                                else if (markers[0] != undefined)
+                                    allMarkers.push(markers[0].marker)
+                            });
+                            if (allMarkers[0] != undefined) {
                                 var group = new L.featureGroup(allMarkers);
                                 map.fitBounds(group.getBounds());
                             }
+                            else
+                                L.popup().setLatLng(map.getCenter()).setContent('No members connected or have not shared their location.').openOn(map);
                         },
-                        title: 'Focus on all markers',
+                        title: 'Focus on all members',
                         icon: 'fa-users fa-lg'
+                    }]
+                });
+
+                 var meetingsBtn = L.easyButton({
+                    id: 'focusMeetings',       // an id for the generated button
+                    position: 'topleft',      // inherited from L.Control -- the corner it goes in
+                    type: 'replace',          // set to animate when you're comfy with css
+                    leafletClasses: true,     // use leaflet classes to style the button?
+                    states:[{                 // specify different icons and responses for your button
+                        stateName: 'default',
+                        onClick: function(){
+                            if (suggested_meetings.group.getBounds().isValid())
+                                map.fitBounds(suggested_meetings.group.getBounds());
+                            else
+                                L.popup().setLatLng(map.getCenter()).setContent('No suggested meeting points.').openOn(map);
+                        },
+                        title: 'Focus on suggested meetings',
+                        icon: '<span class="fa-stack">'+
+                                '<i class="fa fa-globe fa-stack-2x"></i>'+
+                                '<i class="fa fa-crosshairs fa-lg"></i></span>'
                     }]
                 });
 
@@ -460,26 +503,23 @@ function prepareMap() {
                     type: 'replace',           // set to animate when you're comfy with css
                     leafletClasses: true,      // use leaflet classes to style the button?
                     states:[{                  // specify different icons and responses for your button
-                        stateName: 'initial',
+                        stateName: 'default',
                         onClick: function(){
-                            if (markers[0] != undefined) {
-                                var latlng = markers[0].marker.getLatLng();
-
-                                if (dest_marker == undefined && limit_dests < 5) {
-                                    dest_marker = new L.marker([latlng.lat+0.001,latlng.lng], {draggable:'true', icon: new dragIcon({iconUrl: '../images/drag-marker.png'})})
-                                        .on('popupopen',onPopupOpen).addTo(map).bindPopup('Drag and drop the marker to the location you want and click on it to suggest a meeting point.').openPopup();
-                                    dest_marker.on('dragend', function(event) {
-                                        dest_marker = event.target;
-                                        var position = dest_marker.getLatLng();
-                                        dest_marker.setLatLng(new L.LatLng(position.lat, position.lng)).bindPopup('Is this the meeting point you want to suggest to the other members?<p><button class="marker-location-yes">Yes</button><button class="marker-no">No</button></p>');
-                                        map.panTo(new L.LatLng(position.lat, position.lng))
-                                    });
-                                }
-                                else if (dest_marker != undefined)
-                                    L.popup().setLatLng(dest_marker.getLatLng()).setContent('Set up this meeting point before attempting to create a new one.').openOn(map);
-                                else 
-                                    L.popup().setLatLng(markers[0].marker.getLatLng()).setContent('You have suggested five meeting points.<br>Please click one to delete it before suggest a new meeting point.').openOn(map);
-                            }
+                            var center = map.getCenter();
+                            if (dest_marker == undefined && limit_dests < 5) {
+                                dest_marker = new L.marker([center.lat-0.0001, center.lng], {draggable:'true', icon: new dragIcon({iconUrl: '../images/drag-marker.png'})})
+                                    .on('popupopen',onPopupOpen).addTo(map).bindPopup('Drag and drop the marker to the location you want and click on it to suggest a meeting point.').openPopup();
+                                dest_marker.on('dragend', function(event) {
+                                    dest_marker = event.target;
+                                    var position = dest_marker.getLatLng();
+                                    dest_marker.setLatLng(new L.LatLng(position.lat, position.lng)).bindPopup('Is this the meeting point you want to suggest to the other members?<p><button class="marker-location-yes">Suggest!</button></p>Delete without suggesting?<p><button class="mymarker-delete-yes">Yes</button><button class="marker-no">No</button></p>');
+                                    map.panTo(new L.LatLng(position.lat, position.lng))
+                                });
+                            } 
+                            else if (dest_marker != undefined)
+                                L.popup().setLatLng(dest_marker.getLatLng()).setContent('Set up this meeting point before attempting to create a new one.').openOn(map);
+                            else 
+                                L.popup().setLatLng(center).setContent('You have suggested five meeting points.<br>Please click one to delete it before suggest a new meeting point.').openOn(map);
                         },
                         title: 'Suggest a meeting point',
                         icon: 'fa-map-marker fa-lg'
@@ -514,7 +554,7 @@ function prepareMap() {
                     type: 'replace',          // set to animate when you're comfy with css
                     leafletClasses: true,     // use leaflet classes to style the button?
                     states:[{                 // specify different icons and responses for your button
-                        stateName: 'fullScreen',
+                        stateName: 'default',
                         onClick: function(){
                             map.toggleFullscreen();
                         },
@@ -523,7 +563,7 @@ function prepareMap() {
                     }]
                 });
 
-                targetBar = L.easyBar([userBtn, usersBtn]);
+                targetBar = L.easyBar([userBtn, usersBtn, meetingsBtn]);
                 targetBar.addTo(map);
                 $('#myPosition').parent().addClass('target-bar');
 
@@ -581,7 +621,7 @@ function updateMarkers(members) {
 
 
 function addMeetingPoint(userName, latlng, votes) {
-    var tempVotes;
+    var tempVotes = 0;
 
     if (votes == undefined)
         tempVotes = 1;
@@ -590,6 +630,8 @@ function addMeetingPoint(userName, latlng, votes) {
 
     suggested_meetings[latlng.lat+latlng.lng] = new L.marker(latlng, {title: 'Meeting point suggested by ' + userName, icon: new destIcon({iconUrl: '../images/yellow-home.png'})})
                 .on('popupopen',onPopupOpen).addTo(map).bindPopup('<b>'+userName+'</b>'+' has suggested this meeting point.<p>Votes: '+tempVotes+'<br>Do you want to vote it?</p><p><button class="marker-vote">Vote!</button></p>');
+    suggested_meetings[latlng.lat+latlng.lng].votes = tempVotes;
+    suggested_meetings.group.addLayer(suggested_meetings[latlng.lat+latlng.lng]);
 }
 
 
@@ -629,7 +671,7 @@ function geolocation() {
 
         //avoid share the same last location
         if (last_position == undefined || last_position.lat != e.latlng.lat || last_position.lng != e.latlng.lng) {
-            socket.emit('coords', {latlng: e.latlng, acc: e.accuracy});
+            socket.compress(false).emit('coords', {latlng: e.latlng, acc: e.accuracy});
             last_position = e.latlng;
         }
     });
@@ -684,10 +726,15 @@ function initialLoader() {
 
 
 //Prompt an error message and advise the user
-function popUpMapError(msg) {
-    map.fitWorld();    
-    msg += '<p>We recommend the use of a device that can access GPS satellites, Wi-Fi networks, and mobile networks.</p><p>Works best in Chrome</p>'
-    L.popup().setLatLng([0, 0]).setContent(msg).openOn(map);
+function popUpMapError(msg, only) {
+    msg += '<p>We recommend the use of a device that can access GPS satellites, Wi-Fi networks, and mobile networks.</p><p>Works best with Chrome, Firefox, Opera or Edge.</p>';
+
+    //users didnt have shared their locations
+    if (fitWorld == false) {
+        map.fitWorld();
+        L.popup().setLatLng(map.getCenter()).setContent(msg).openOn(map);
+        fitWorld = true;
+    }
 }
 
 
@@ -697,19 +744,46 @@ function onPopupOpen() {
 
     $('.marker-location-yes:visible').click(function () {
         var latlng = tempMarker.getLatLng();
-        socket.emit('suggested point', latlng);
+        socket.compress(false).emit('suggested point', latlng);
         map.removeLayer(tempMarker);
         suggested_meetings[latlng.lat+latlng.lng] = new L.marker(latlng, {icon: new destIcon({iconUrl: '../images/blue-home.png'})})
-            .on('popupopen',onPopupOpen).addTo(map).bindPopup('Votes: 1</span><br>Do you want to vote/unvote this meeting point?<p><button class="marker-vote">Unvote!</button></p>Delete the suggested meeting point?<p><button class="marker-delete-yes">Yes</button><button class="marker-no">No</button></p>');
+                .on('popupopen',onPopupOpen).addTo(map).bindPopup('Votes: 1</span><br>Do you want to vote/unvote this meeting point?<p><button class="marker-vote">Unvote!</button></p>Delete the suggested meeting point?<p><button class="marker-delete-yes">Yes</button><button class="marker-no">No</button></p>');
         suggested_meetings[latlng.lat+latlng.lng].unvoted = true;
+        suggested_meetings[latlng.lat+latlng.lng].votes = 1;
+        suggested_meetings[latlng.lat+latlng.lng].owner = userName;
+        checkMostVotedMeeting(latlng.lat,latlng.lng);
+        suggested_meetings.group.addLayer(suggested_meetings[latlng.lat+latlng.lng]);
         limit_dests++;
         dest_marker = undefined;
     });
 
     $('.marker-delete-yes:visible').click(function () {
-        limit_dests--;
+        var latlng = tempMarker.getLatLng();
         map.removeLayer(tempMarker);
-        socket.emit('remove suggested point', tempMarker.getLatLng());
+        suggested_meetings.group.removeLayer(tempMarker);
+        limit_dests--;
+
+        //if the removed meeting is not the most voted
+        if (mostVoted != latlng.lat+latlng.lng)
+            socket.compress(false).emit('remove suggested point', latlng);
+        else { //find the most voted meeting and send it and the removed
+            var found = findMostVotedMeeting();
+            if (found != undefined) {
+                socket.compress(false).emit('remove suggested point', latlng, found.lat+found.lng);
+                newMostVotedMeeting(found.lat, found.lng);
+            }
+            else {
+                socket.compress(false).emit('remove suggested point', latlng);
+                mostVoted = undefined;
+            }
+        }
+        delete suggested_meetings[latlng.lat+latlng.lng];
+    });
+
+    //delete before set up the meeting point
+    $('.mymarker-delete-yes:visible').click(function () {
+        map.removeLayer(tempMarker);
+        dest_marker = undefined;
     });
 
     $('.marker-no:visible').click(function () {
@@ -720,21 +794,27 @@ function onPopupOpen() {
         var latlng = tempMarker.getLatLng();
 
         if (suggested_meetings[latlng.lat+latlng.lng].unvoted) {
-            socket.emit('unvote meeting point', latlng);
+            socket.compress(false).emit('unvote meeting point', latlng);
             suggested_meetings[latlng.lat+latlng.lng].unvoted = false;
+            suggested_meetings[latlng.lat+latlng.lng].votes--;
             tempMarker.setPopupContent(updateVote(tempMarker.getPopup().getContent(), -1).
                 replace(/Vote!|Unvote!/,function(match) {return (match=="Vote!")?"Unvote!":"Vote!";}));
             tempMarker.fire('popupopen');
+            if (latlng.lat+latlng.lng == mostVoted)
+                findMostVotedMeeting();
         }
         else {
-            socket.emit('vote meeting point', latlng);
+            socket.compress(false).emit('vote meeting point', latlng);
             suggested_meetings[latlng.lat+latlng.lng].unvoted = true;
+            suggested_meetings[latlng.lat+latlng.lng].votes++;
             tempMarker.setPopupContent(updateVote(tempMarker.getPopup().getContent(), 1).
                 replace(/Vote!|Unvote!/,function(match) {return (match=="Vote!")?"Unvote!":"Vote!";}));
             tempMarker.fire('popupopen');
+            checkMostVotedMeeting(latlng.lat, latlng.lng);
         }
     });
 }
+
 
 function updateVote(content, vote) {
     var res = content.replace(/Votes: (\d+)/, function(match, number) {
@@ -742,5 +822,40 @@ function updateVote(content, vote) {
         return 'Votes: ' + votes;
     });
     return res;
+}
+
+
+function checkMostVotedMeeting(lat, lng) {
+    if (mostVoted == undefined)
+        newMostVotedMeeting(lat, lng);
+
+    else if (suggested_meetings[mostVoted].votes < suggested_meetings[lat+lng].votes) {
+        if (suggested_meetings[mostVoted].owner == userName)
+            suggested_meetings[mostVoted].setIcon(new destIcon({iconUrl: '../images/blue-home.png'}));
+        else
+            suggested_meetings[mostVoted].setIcon(new destIcon({iconUrl: '../images/yellow-home.png'}));
+        newMostVotedMeeting(lat, lng);
+    }
+}
+
+
+function newMostVotedMeeting(lat, lng) {
+    suggested_meetings[lat+lng].setIcon(new mostVotedIcon({iconUrl: '../images/green-home.png'}));
+    mostVoted = lat+lng;
+}
+
+
+function findMostVotedMeeting() {
+    var array = suggested_meetings.group.getLayers();
+    var highVoted = {votes: 0};
+
+    for (var i = 0; i < array.length; i++) {
+        if (array[i].votes > highVoted.votes || highVoted.latlng == undefined) 
+            highVoted = {latlng: array[i].getLatLng(), votes: array[i].votes};
+    }
+    if (highVoted.latlng != undefined)
+        checkMostVotedMeeting(highVoted.latlng.lat, highVoted.latlng.lng);
+
+    return highVoted.latlng;
 }
 });

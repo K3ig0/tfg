@@ -392,6 +392,7 @@
     border-radius: 12px;
     }
 .leaflet-popup-content {
+    max-width: 250px;
     margin: 13px 19px;
     line-height: 1.4;
     }
@@ -589,19 +590,29 @@
     border-bottom: 0px;
 }
 
-#membersPosition {
-    color: #FFD700;
-}
 
 #membersPosition {
     color: #FFD700;
+    border-bottom-right-radius: 0px;
     border-bottom-left-radius: 0px;
-    border-top-right-radius: 4px;
+    border-right: 1px solid #ccc;
 }
+
+
+#focusMeetings {
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 0px;
+}
+
+.fa-globe {
+    color: #4169E0;
+    opacity: 0.5;
+}
+
 
 /* suggesting meeting points */
 
-.marker-location-yes, .marker-no, .marker-delete-yes, .marker-vote {
+.marker-location-yes, .marker-no, .marker-delete-yes, .mymarker-delete-yes, .marker-vote {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
     background: white;
@@ -610,7 +621,7 @@
     border-radius: 5px;
 }
 
-.marker-location-yes, .marker-no, .marker-delete-yes {
+.marker-no, .marker-delete-yes, .mymarker-delete-yes {
     width: 45%;
 }
 
@@ -618,7 +629,7 @@
     float: right;
 }
 
-.marker-vote {
+.marker-location-yes, .marker-vote {
     text-align: center;
     width: 90%;
 }

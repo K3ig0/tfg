@@ -1,33 +1,41 @@
 * { 
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* background image */
+html {
+    background: url(../images/iron_globe1080.jpg);
+    background-size: cover;
+    height: 100%;
 }
 
 body {
-	font: 13px Arial, Helvetica, sans-serif;
+    font: 13px Arial, Helvetica, sans-serif;
     color: #222;
-    background-color: #d8d8d8;
 }
 
 /***NEW / JOIN ROOM SCREEN ***/
 #access {
-	display: none;
-	float: left;
+    display: none;
+    float: left;
     padding: 12.5% 0% 12.5% 25%;
 }
 
 #access button {
-	display: block;
-	width: 20vw;
-    margin-bottom: 15vh;
+    display: block;
+    width: 20vw;
     padding: 1.75rem 0;
-    background-color: #f2f2f2;
-  	border-radius: .25em;
-    text-shadow: 0 1px 1px hsla(0,0%,100%,.25);
     font-size: 1.25rem;
     font-weight: bold;
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    opacity: 0.9;
+    background-color: #444;
+    color: #f2f2f2;
+}
+
+#access button:hover {
+    background-color: #222;
 }
 
 #access span {
@@ -35,31 +43,37 @@ body {
     padding-right: 1.25rem;
 }
 
+#newRoom {
+    margin-bottom: 15vh;
+}
+
 /*** PUBLIC ROOMS ***/
 #publicRooms {
-	display: none;
-	float: right;
+    display: none;
+    float: right;
     width: 20vw;
     height: 60vh;
     margin: 8%;
     margin-right: 25%;
     font-size: 0.9rem;
     text-align: left;
-    overflow: auto;
-	border-style: ridge;
-	border-color: #f2f2f2;
+    overflow-y: auto;
+    border-style: ridge;
+    border-color: #f2f2f2;
     text-align: center;
+    background-color: #444;
+    color: #f2f2f2;
+    opacity: 0.9;
 }
 
 #publicRooms div {
-    color: #222;
     font-weight: bold;
-	padding: 0.5rem;
+    padding: 0.5rem;
     letter-spacing: 1px;
 }
 
 a {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 #publicRooms ul {
@@ -67,49 +81,69 @@ a {
 }
 
 #publicRooms li, #publicRooms p {
-    color: #222;
-	font-family: monospace;
+    font-family: monospace;
     line-height: 14px;
     padding: 0.5rem;
     text-align: justify;
-    border-top: 1.5px dashed #ccc;
 }
 
 /*** NEW / JOIN OPTIONS ***/
 .accessOptions {
-	display: none;
-	top: 0;
-	position: absolute;
+    display: none;
+    top: 0;
+    position: absolute;
     width: 100%;
     padding: 6% 20%;
     text-align: center;
     font-weight: bold;
+    color: #f2f2f2;
 }
 
-.accessOptions p {
-	color: #aaa;
+.accessOptions legend, .accessOptions fieldset {
+    background-color: #444;
+    opacity: 0.95;
+    border-style: ridge;
+    border-color: #f2f2f2;
 }
 
 .accessOptions legend {
-	font-size: 1rem;
-	padding: 1rem;
-	margin-bottom: 0.5rem;
+    font-size: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-style: double;
 }
 
 .accessOptions button {
-	width: 6rem;
+    width: 6rem;
     margin: 1rem 0.5rem;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     text-align: center;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     background: #f2f2f2;
+    opacity: 0.9;
+}
+
+.accessOptions p {
+    background-color: #f00;
 }
 
 #new, #join {
-	background-color: #6fcf6f;
-	color: #f2f2f2;
+    background-color: #66cc66;
+    color: #f2f2f2;
     box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+#new:hover, #join:hover {
+    background-color: #53c653;
+}
+
+.cancel:hover {
+    background-color: #e6e6e6;
+}
+
+#new[disabled], #join[disabled] {
+    opacity: 0.4;
 }
 
 .preForm {
@@ -131,78 +165,84 @@ a {
 
 /*** MAP ***/
 #map {
-	display: none;
-	top: 0;
-	position: fixed;
-	width: 100%;
-	height: 65vh; 
+    display: none;
+    top: 0;
+    position: fixed;
+    width: 100%;
+    height: 65vh; 
 }
 /*-- */
 
 
 /*** CHAT ***/
 #chat {
-	display: none;
-	bottom: 0;
-	position: fixed;
-	width: 100%;
-	height: 35vh;
-	border-style: ridge;
-	border-width: 1px;
-	border-color: #ccc;
+    display: none;
+    bottom: 0;
+    position: fixed;
+    width: 100%;
+    height: 35vh;
+    border-style: ridge;
+    border-width: 1px;
+    border-color: #ccc;
 }
 
 #chat_info {
-	background-color: #d8d8d8;
-	float: left;
-	padding: 5px 10px;
-	border-style: ridge;
-	border-color: #f2f2f2;
+    background-color: #444;
+    float: left;
+    padding: 5px 10px;
+    border-style: ridge;
+    border-color: #f2f2f2;
+    min-width: 8em;
+    opacity: 0.9;
+    color: #f2f2f2;
 }
 
 #chat_info p {
-	padding-top: 0.5em;
-	padding-bottom: 0.5em;
-	letter-spacing: 1px;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    letter-spacing: 1px;
 }
 
 #roomNumber {
-	padding-bottom: 1em;
-	font-weight: bold;
-	color: #fff;
-	border-bottom: 1.5px dotted #ccc;
+    text-align: center;
+    margin-bottom: 1em;
+    font-weight: bold;
+    background-color: #f2f2f2;
+    color: #222;
 }
 
 #members {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 #conversation {
-	padding-top: 0.5em;
-	background: #f2f2f2;
+    padding-top: 0.5em;
+    color: #222;
+    background: #fff;
+    opacity: 0.9;
 }
 
 #chat_info, #conversation {
-	overflow: auto;
-	height: 30vh;
+    overflow-y: auto;
+    height: 30vh;
 }
 
 #messages { 
-	font: 14px Arial, Helvetica, sans-serif;
+    font: 14px Arial, Helvetica, sans-serif;
 }
 
 #messages li {
-	padding: 5px 10px;
+    padding: 5px 10px;
 }
 
 #chatBar {
     display: table;
-	width: 100%;
+    width: 100%;
 }
 
 #chatBar input {
-	height: 5vh;
-	padding-left: 0.5em;
+    height: 5vh;
+    padding-left: 0.5em;
     width: 100%;
 }
 /*-- */
@@ -210,28 +250,28 @@ a {
 
 /** Switch between map and chat (Mobile and Tablets) **/
 #switchButtons { 
-	display: none;
+    display: none;
 }
 
 #switchButtons button {
-	top: 0;
-	left: 0;
+    top: 0;
+    left: 0;
     position: absolute;
     width: 50%;
     height: 12vh;
     letter-spacing: 1px;
     font-size: 1rem;
     text-align: center;
-    background: #f2f2f2;
-	border-style: outset;
+    background-color: #f2f2f2;
+    border-style: outset;
 }
 
 #switchButtons button:nth-child(1) {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 #switchButtons button:nth-child(2) {
-	left: 50%;
+    left: 50%;
 }
 /*-- */
 
@@ -241,60 +281,71 @@ a {
 /* Mobile/Tablet-portrait
    ---------------------------------- */
 @media (max-width: 800px) {
+    html {
+        background: url(../images/iron_globe_portrait.jpg);
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
 
-	#access {
-		bottom: 0;
-		position: absolute;
-		height: 40vh;
-		padding: 0 20%;
-	}
+    #access {
+        bottom: 0;
+        position: absolute;
+        height: 40vh;
+        padding: 0 20%;
+    }
 
-	#access button {
-		width: 60vw;
-		padding: 5vh 0;
-		margin-bottom: 5vh;
+    #newRoom {
+        margin-bottom: 0vh;
+    }
+
+    #access button {
+        width: 60vw;
+        padding: 5vh 0;
+        margin-bottom: 5vh;
         font-size: 1rem;
-	}
+    }
 
-	#publicRooms {
-		top: 0;
-		position: absolute;
-		height: 50vh;
-		width: 60%;
-		margin: 2.5vh 20%;
-	}
+    #publicRooms {
+        top: 0;
+        position: absolute;
+        height: 50vh;
+        width: 60%;
+        margin: 2.5vh 20%;
+    }
 
-	#publicRooms div {
-		padding: 2.5vh 0;
-	}
+    #publicRooms div {
+        padding: 2.5vh 0;
+    }
 
-	#publicRooms p {
-		padding: 2.5vh 5vw;
-		line-height: 5vh;
-		text-align: center;
-	}
+    #publicRooms p {
+        padding: 2.5vh 5vw;
+        line-height: 5vh;
+        text-align: center;
+    }
 
-	.accessOptions {
-		padding: 1%;
-	}
+    .accessOptions {
+        padding: 10% 1%;
+    }
 
-	#map {
-		top: auto;
-		bottom: 0;
-		height: 88vh;
-	}
+    #map {
+        top: auto;
+        bottom: 0;
+        height: 88vh;
+    }
 
-	#chat {
-		height: 88vh;
-	}
+    #chat {
+        height: 88vh;
+    }
 
-	#chat_info, #conversation {
-		height: 76vh;
-	}
+    #chat_info, #conversation {
+        height: 76vh;
+    }
 
-	#chatBar input {
-		height: 12vh;
-	}
+    #chatBar input {
+        height: 12vh;
+    }
 }
 
 
@@ -302,63 +353,79 @@ a {
    --------------------------------- */
 @media (max-height: 400px) and (min-width: 427px) {
 
-	#access {
-		top: 0;
-		padding: 15vh 0 15vh 12.5vw; /* top right bottom left */
-		height: 70vh;
-	}	
+    html {
+        background: url(../images/iron_globe_landscape.jpg);
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
 
-	#access button {
-		width: 30vw;
-		padding: 10vh 0;
-		margin-bottom: 10vh;
-	}
+    #access {
+        top: 0;
+        padding: 15vh 0 15vh 12.5vw; /* top right bottom left */
+        height: 70vh;
+    }
+        
+    #newRoom {
+        margin-bottom: 0vh;
+    }
 
-	#publicRooms {
-		position: relative;
-		width: 35vw;
-		height: 80vh;
-		margin: 10vh 12.5vw 10vh 5vw; /* top right bottom left */
-	}
+    #access button {
+        width: 30vw;
+        padding: 10vh 0;
+        margin-bottom: 10vh;
+    }
 
-	#publicRooms p {
-		padding: 5vh 2.5vw;
-		line-height: 10vh;
-	}
+    #publicRooms {
+        position: relative;
+        width: 35vw;
+        height: 80vh;
+        margin: 10vh 12.5vw 10vh 5vw; /* top right bottom left */
+    }
 
-	.form select {
-		height: 12vh;
-	}
+    #publicRooms p {
+        padding: 5vh 2.5vw;
+        line-height: 10vh;
+    }
 
-	#switchButtons button {
-		height: 18vh;
-	}
+    .form select {
+        height: 12vh;
+    }
 
-	#map {
-		height: 82vh;
-	}
+    #switchButtons button {
+        height: 18vh;
+    }
 
-	#chat {
-		height: 82vh;
-	}
+    .accessOptions {
+        padding: 1%;
+    }
 
-	#chat_info, #conversation {
-		height: 64vh;
-	}
+    #map {
+        height: 82vh;
+    }
 
-	#chatBar input {
-		height: 18vh;
-	}
+    #chat {
+        height: 82vh;
+    }
+
+    #chat_info, #conversation {
+        height: 64vh;
+    }
+
+    #chatBar input {
+        height: 18vh;
+    }
 }
 
 
 /* Mobile - keyboard (writing mode) */
 @media (max-height: 210px) {
-	#switchButtons button, #chat_info, #conversation {
-		display: none;
-	}
+    #switchButtons button, #chat_info, #conversation {
+        display: none;
+    }
 
-	#chatBar input {
-		height: 50vh;
-	}
+    #chatBar input {
+        height: 50vh;
+    }
 }
