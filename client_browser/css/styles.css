@@ -76,6 +76,10 @@ a {
     font-weight: bold;
 }
 
+#publicRooms a {
+    color: #1fdfdf;
+}
+
 #publicRooms ul {
     list-style-type: none;
 }
