@@ -248,6 +248,10 @@
     height: 35px;
     line-height: 35px;
     }
+    
+.leaflet-touch .leaflet-top {
+    margin-top: 1.5vh;
+    }
 
 
 /* zoom control */
@@ -575,12 +579,10 @@
     line-height: 35px;
 }
 
-
 .target-bar {
     position: absolute;
     display: inline-flex;
 }
-
 
 #myPosition {
     color: #4169E0;

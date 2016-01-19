@@ -3,22 +3,22 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'none'; 
         script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com api.mapbox.com; 
         connect-src 'self' ws: wss:; 
         img-src 'self' data: http://cdn.leafletjs.com *.tile.openstreetmap.org *.basemaps.cartocdn.com;
-        style-src 'self' netdna.bootstrapcdn.com api.mapbox.com; 
-        font-src netdna.bootstrapcdn.com"> 
+        style-src 'self' maxcdn.bootstrapcdn.com api.mapbox.com; 
+        font-src maxcdn.bootstrapcdn.com"> 
 
-    <title>Iteration 7</title>
+    <title>Meeting Rooms</title>
 
     <link rel="icon" type="image/png" href="images/icon.png">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/leaflet.css">
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v0.0.4/leaflet.fullscreen.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css">
 </head>
 
 <body>
@@ -116,9 +116,9 @@
 
     <!--JavaScript dependencies-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.3/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
-    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v0.0.4/Leaflet.fullscreen.min.js'></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
     <script src="js/client.js"></script>
     <script src="js/Control.Loading.js"></script>
     <script src="js/easy-button.js"></script>
