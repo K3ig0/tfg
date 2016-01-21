@@ -407,11 +407,11 @@ function initRoom(members, meeting_points) {
 
 function prepareMap() {
     var osm_tileLayer = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://cartodb.com/attributions">CartoDB</a>'
     });
 
     var cartoDB_tileLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://cartodb.com/attributions">CartoDB</a>'
     });
 
     map = L.map('map', {zoomControl: false});
@@ -645,35 +645,46 @@ function geolocation() {
 
     //if the geolocation worked ->
     map.on('locationfound', function onLocationFound(e){
-        //only apply the zoom one time!
-        if (setView == true) {
-            setView = false;
-            map.setView(e.latlng, 16);
-        }
+
+        //quit the message 'Attempting to find your location...'
         if (geolocated == false) {
             geolocated = true;
             geolocatingLoader.removeFrom(map);
         }
+
         var radius = (e.accuracy / 2).toFixed();
+        var accuracyLimit = 500;
 
-       //if my marker is defined (my marker is the position: zero) ->
-       if (markers[0] != undefined) {
-            markers[0].marker.setLatLng(e.latlng);
-            markers[0].marker.setPopupContent('You are within ' + radius + ' meters from this point');
-            markers[0].circle.setLatLng(e.latlng);
-            markers[0].circle.setRadius(radius);
-        }
-        else {
-            markers[0] = {marker: L.marker(e.latlng, {title: 'My location', riseOnHover: true, icon: new markerIcon({iconUrl: '../images/blue-marker.png'})}), circle: L.circle(e.latlng, radius)};
-            markers[0].marker.addTo(map).bindPopup('You are within ' + radius + ' meters from this point').openPopup();
-            markers[0].circle.addTo(map);
-        }
+        //checking accuracy
+        if (radius < accuracyLimit) {
 
-        //avoid share the same last location
-        if (last_position == undefined || last_position.lat != e.latlng.lat || last_position.lng != e.latlng.lng) {
-            socket.compress(false).emit('coords', {latlng: e.latlng, acc: e.accuracy});
-            last_position = e.latlng;
+            //only apply the zoom one time!
+            if (setView == true) {
+                setView = false;
+                map.setView(e.latlng, 16);
+            }
+
+            //if my marker is defined (my marker is the position: zero) ->
+            if (markers[0] != undefined) {
+                markers[0].marker.setLatLng(e.latlng);
+                markers[0].marker.setPopupContent('You are within ' + radius + ' meters from this point');
+                markers[0].circle.setLatLng(e.latlng);
+                markers[0].circle.setRadius(radius);
+            }
+            else {
+                markers[0] = {marker: L.marker(e.latlng, {title: 'My location', riseOnHover: true, icon: new markerIcon({iconUrl: '../images/blue-marker.png'})}), circle: L.circle(e.latlng, radius)};
+                markers[0].marker.addTo(map).bindPopup('You are within ' + radius + ' meters from this point').openPopup();
+                markers[0].circle.addTo(map);
+            }
+
+            //avoid share the same last location
+            if (last_position == undefined || last_position.lat != e.latlng.lat || last_position.lng != e.latlng.lng) {
+                socket.compress(false).emit('coords', {latlng: e.latlng, acc: e.accuracy});
+                last_position = e.latlng;
+            }
         }
+        else //not accuracy
+            popUpMapError('Exceeded the limit of accuracy ('+accuracyLimit+'m). Your location can not be achieved accurately.')
     });
 
     //if the geolocation failed ->
@@ -727,7 +738,8 @@ function initialLoader() {
 
 //Prompt an error message and advise the user
 function popUpMapError(msg, only) {
-    msg += '<p>We recommend the use of a device that can access GPS satellites, Wi-Fi networks, and mobile networks.</p><p>Works best with Chrome, Firefox, Opera or Edge.</p>';
+    msg += '<p>We recommend using a device that can access GPS satellites, Wi-Fi networks, and mobile networks. However you are free to use most of the features. Close this dialogue to start.</p>'+
+            '<p>Works best with Chrome, Firefox, Opera or Edge.</p>';
 
     //users didnt have shared their locations
     if (fitWorld == false) {
