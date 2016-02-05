@@ -4,11 +4,11 @@ Título: Aplicación web estructurada en salas para la reunión o encuentro de u
 
 Trabajo Fin de Grado
 
-Facultad de Informática de A Coruña
+Facultad de Informática de A Coruña  
 Universidad de A Coruña
 
 
-Aplicación en línea: https://rooms.daplie.me/
+Aplicación en línea: https://rooms.daplie.me/  
 Dirección IP: http://52.30.178.167
 
 ## Guía de instalación (servidor en local)
