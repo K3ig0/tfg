@@ -1,6 +1,6 @@
 {
-  "name": "Aplicacion web estructurada en salas para la reunion o encuentro de un grupo de personas",
-  "version": "1.0",
+  "name": "TFG",
+  "version": "1.0.0",
   "main": "server.js",
   "author": "K3ig0 <keigo.fic@gmail.com>",
   "license": "MIT",
