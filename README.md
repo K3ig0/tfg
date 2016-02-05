@@ -1,10 +1,23 @@
-# Español - Guía de instalación (servidor en local)
-## Requerimientos
+## Información
+
+Título: Aplicación web estructurada en salas para la reunión o encuentro de un grupo de personas
+
+Trabajo Fin de Grado
+
+Facultad de Informática de A Coruña
+Universidad de A Coruña
+
+
+Aplicación en línea: https://rooms.daplie.me/
+Dirección IP: http://52.30.178.167
+
+## Guía de instalación (servidor en local)
+### Requerimientos
 
 Sitio web de Nodejs: https://nodejs.org/  
 Instalando Nodejs: https://nodejs.org/en/download/package-manager/
 
-## Instrucciones
+### Instrucciones
 
 Antes de ejecutar la aplicación por primera vez ejecutar en el directorio de esta:
 
@@ -25,13 +38,13 @@ Acceda al servidor en su navegador introduciendo en la barra de direcciones loca
 http://localhost:8988
 ```
 
-# English - Installation guide (server on localhost)
-## Requirements
+## Installation guide (server on localhost)
+### Requirements
 
 Nodejs website: https://nodejs.org/  
 Installing Nodejs: https://nodejs.org/en/download/package-manager/
 
-## How to
+### How to
 
 Before running for first time execute inside the directory:
 
