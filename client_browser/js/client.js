@@ -653,7 +653,7 @@ function geolocation() {
         }
 
         var radius = (e.accuracy / 2).toFixed();
-        var accuracyLimit = 500;
+        var accuracyLimit = 1000;
 
         //checking accuracy
         if (radius < accuracyLimit) {
